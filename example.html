@@ -4,15 +4,34 @@
     <meta charset="UTF-8">
     <title>xcss example </title>
     <style>
-        my-color {
-            color:red;
+        .clr-red {
+            color: #FFDDDD;
         }
-        .myClass extends my-color{
-            background-color: green;
+
+        .bg-blue {
+            background-color:#1133aa;
+        }
+
+        .gekanteld {
+            transform:rotate(30deg);
+        }
+
+        .my-box extends .clr-red, .bg-blue, .gekanteld {
+            border: 2px solid black;
+            padding:3px;
+        }
+
+        .my-dialog extends .my-box {
+            font-size: 1em;
+            position:absolute;
+            top: 500px;
+            left:500px;
+
         }
     </style>
+    <script src="xcss.js" type="text/javascript"></script>
 </head>
 <body>
-  <div class="myClass">hi there it's xcss</div>
+  <div class="my-dialog">hi there it's xcss</div>
 </body>
 </html>
