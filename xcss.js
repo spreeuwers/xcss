@@ -1,18 +1,24 @@
-(function inheritCSSRules() {
+(function xcss() {
+
     "use strict";
     var allCSSRules = {};
     var visitedRules = {};
     var EXTENDS_EXPR = /\s+extends\s+/i;
-
-    //collect all style rules
-    collectRules(document);
-    //console.log(allCSSRules);
-
     var styleSheet = addNewStylesheet();
 
-    extendRules(allCSSRules);
+    document.addEventListener('DOMContentLoaded', inheritCSSRules);
+    return;
 
-    console.log(styleSheet);
+    function inheritCSSRules() {
+        //collect all style rules
+        console.time('inheritCSSRules');
+        collectRules(document);
+        //console.log(allCSSRules);
+        extendRules(allCSSRules);
+
+        //console.log(styleSheet);
+        console.timeEnd('inheritCSSRules');
+    }
 
 
     function extendRules(cssRules) {
@@ -72,5 +78,5 @@
         return styleEl.sheet;
     }
 
-    document.addEventListener('DOMContentLoaded', inheritCSSRules);
+
 })();
