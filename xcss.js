@@ -4,8 +4,6 @@
     var allCSSRules = {};
     var visitedRules = {};
     var EXTENDS_EXPR = /\s+extends\s+/i;
-    var WHEN_EXPR = /\s+when\s+/i;
-    var SEND_EXPR = /\s+send\s+/i; 
     var KEYWORDS = /\s+(EXTENDS|SEND|WHEN|SET|DO)\s+/i;
     var styleSheet = addNewStylesheet();
 
