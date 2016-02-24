@@ -4,10 +4,22 @@
     var allCSSRules = {};
     var visitedRules = {};
     var EXTENDS_EXPR = /\s+extends\s+/i;
+    var WHEN_EXPR = /\s+when\s+/i;
+    var SEND_EXPR = /\s+send\s+/i; 
+    var KEYWORDS = /\s+(EXTENDS|SEND|WHEN|SET|DO)\s+/i;
     var styleSheet = addNewStylesheet();
 
     document.addEventListener('DOMContentLoaded', inheritCSSRules);
+    window.addEventListener('hashchange',stateChanged);
     return;
+
+    function stateChanged(){
+        var state = {};
+        var key = location.hash.split('?')[0].replace(/#\/?/,'').split('/').join('.');
+        console.log('state:'+ key);
+        state[key] ={search:location.search};
+        postMessage(state,location.href);
+    }
 
     function inheritCSSRules() {
         //collect all style rules
@@ -25,31 +37,81 @@
         Object.keys(cssRules).forEach(
             function (selector) {
 
-                if (visitedRules[selector]) {
+               if (visitedRules[selector]) {
                     //console.log('skipping visited selector: ' + selector);
                     return;
                 }
                 visitedRules[selector] = cssRules[selector];
-
+                var parts = selector.split(KEYWORDS);
+                console.log('parts: [' + parts.join(' : '), '] selector:',selector);
                 var inherit = selector.trim().split(EXTENDS_EXPR);
-                if (inherit.length === 2) {
-                    console.log('processing selector: ' + selector);
-                    var dest = inherit[0].trim();
-                    var from = inherit[1].trim().split(/\s*,\s*/).map(
-                        function (fromSelector) {
-                            //resolve fromSelector when not found in currenttly resolved rules
-                            if (!cssRules[fromSelector]) {
-                                console.log('resolving rule fromSelector: ' + fromSelector);
-                                extendRules(cssRules);
+                if (parts.length > 2) {
+                    if (parts[1] === 'extends' ){
+                        console.log('processing EXTENDS selector: ' + selector);
+                        var dest = parts[0].trim();
+                        var from = parts[2].trim().split(/\s*,\s*/).map(
+                            function (fromSelector) {
+                                //resolve fromSelector when not found in currenttly resolved rules
+                                if (!cssRules[fromSelector]) {
+                                    console.log('resolving rule fromSelector: ' + fromSelector);
+                                    extendRules(cssRules);
+                                }
+                                return (cssRules[fromSelector]) ? cssRules[fromSelector].style.cssText : '';
                             }
-                            return (cssRules[fromSelector]) ? cssRules[fromSelector].style.cssText : '';
+                        ).join(' ');
+                        var self = cssRules[selector];
+                        console.log('adding rule: ' + dest + '{' + self.style.cssText + from + '}');
+                        var idx = styleSheet.insertRule(dest + '{' + self.style.cssText + from + '}', styleSheet.cssRules.length);
+                        cssRules[dest] = styleSheet.cssRules[idx];
+                    }
+                    
+                    if (parts[1] === 'when'){
+                        console.log('processing WHEN selector: ' + selector);
+                        var target = parts[0].trim();
+                        var msg = parts[2].trim().split(/\s*,\s*/).forEach(
+                          function(msgKey){
+                              console.log('binding message listener: ' + msgKey);
+                              window.addEventListener('message',
+                                 function(evt){
+                                    console.log('event received: '+  msgKey,'evt:' ,evt.data);
+                                    //console.log('event received: ', evt.data );
+                                    var elms = document.querySelectorAll(target);
+                                    for ( var i=0; i < elms.length; i++ ){
+                                      console.log('event handled:',msgKey);
+                                      if ( !elms[i].cssText ) {
+                                          elms[i].cssText = elms[i].style.cssText;
+                                      }
+                                      if ( evt.data[msgKey] ){
+                                            
+                                        elms[i].style.cssText = cssRules[selector].style.cssText;
+                                      } else {
+                                        elms[i].style.cssText = elms[i].cssText;    
+                                      }
+                                    }
+                                 }
+                              ); 
+                          }
+                        );    
+                    }
+                    
+                    if (parts[1] === 'send'){
+                        console.log('processing SEND selector: ' + selector);
+                        var target = parts[0].trim();
+                        var msg = parts[2].trim();
+                        console.log('binding message events: ' + msg + target);
+                        var elms = document.querySelectorAll(target);
+                        for ( var i=0; i < elms.length; i++ ){
+                            console.log('adding eventlistener!')
+                            elms[i].addEventListener('click',
+                              function(evt){
+                                  location.hash =msg + '?id=' + evt.srcElement.id;
+                              }
+                            );
                         }
-                    ).join(' ');
-                    var self = cssRules[selector];
-                    console.log('adding rule: ' + dest + '{' + self.style.cssText + from + '}');
-                    var idx = styleSheet.insertRule(dest + '{' + self.style.cssText + from + '}', styleSheet.cssRules.length);
-                    cssRules[dest] = styleSheet.cssRules[idx];
+                              
+                    }
                 }
+
             }
         );
     }
