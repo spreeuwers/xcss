@@ -16,22 +16,45 @@
             transform:rotate(30deg);
         }
 
-        .my-box extends .clr-red, .bg-blue, .gekanteld {
+        .my-box EXTENDS .clr-red, .bg-blue, .gekanteld {
             border: 2px solid black;
             padding:3px;
         }
 
-        .my-dialog extends .my-box {
+        .my-dialog EXTENDS .my-box {
             font-size: 1em;
             position:absolute;
-            top: 500px;
-            left:500px;
+            top: 50%;
+            left:50%;
 
+        }
+        #btn1 SEND buttonclicked  {
+
+        }
+
+        #mytext WHEN buttonclicked {
+             background-color:yellow;
+        }
+
+        #mycheck WHEN buttonclicked {
+             background-color:red;
+        }
+        #dlg1 WHEN buttonclicked{
+            transform:rotate(45deg);
+        }
+        #dlg1 WHEN rotate {
+            transform:rotate(270deg);
         }
     </style>
     <script src="xcss.js" type="text/javascript"></script>
 </head>
 <body>
-  <div class="my-dialog">hi there it's xcss</div>
+  <div id="dlg1" class="my-dialog">hi there it's xcss</div>
+  <button id='btn1' data-value="hello">press</button>
+  <input id="mytext" value="hi" style="background-color:red">
+  <br>
+  <input id="mycheck" type="checkbox" value="chk1">checkbox
+  <br>
+  <a href="#rotate?angle=270deg">rotate</a>
 </body>
 </html>
