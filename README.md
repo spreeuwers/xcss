@@ -13,7 +13,7 @@ Because the script iterates recursively through the rules, transitive inheritanc
 It is possible to build css class hierarchies very easy.
 This saves a lot of less or sass work.
 
-Also added a WHEN construction. This enables conditional css
-the css in the rule is applied only WHEN the hash of the url
+Also added a WHEN construction. This enables conditional css.
+The css in the rule is applied only WHEN the hash of the url
 equals the name used un the WHEN construction.
 
