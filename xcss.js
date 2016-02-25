@@ -3,7 +3,6 @@
     "use strict";
     var allCSSRules = {};
     var visitedRules = {};
-    var EXTENDS_EXPR = /\s+extends\s+/i;
     var KEYWORDS = /\s+(EXTENDS|SEND|WHEN|SET|DO)\s+/i;
     var styleSheet = addNewStylesheet();
 
@@ -42,7 +41,6 @@
                 visitedRules[selector] = cssRules[selector];
                 var parts = selector.split(KEYWORDS);
                 console.log('parts: [' + parts.join(' : '), '] selector:',selector);
-                var inherit = selector.trim().split(EXTENDS_EXPR);
                 if (parts.length > 2) {
                     if (parts[1] === 'extends' ){
                         console.log('processing EXTENDS selector: ' + selector);
@@ -62,7 +60,7 @@
                         var idx = styleSheet.insertRule(dest + '{' + self.style.cssText + from + '}', styleSheet.cssRules.length);
                         cssRules[dest] = styleSheet.cssRules[idx];
                     }
-                    
+
                     if (parts[1] === 'when'){
                         console.log('processing WHEN selector: ' + selector);
                         var target = parts[0].trim();
@@ -80,18 +78,18 @@
                                           elms[i].cssText = elms[i].style.cssText;
                                       }
                                       if ( evt.data[msgKey] ){
-                                            
+
                                         elms[i].style.cssText = cssRules[selector].style.cssText;
                                       } else {
-                                        elms[i].style.cssText = elms[i].cssText;    
+                                        elms[i].style.cssText = elms[i].cssText;
                                       }
                                     }
                                  }
-                              ); 
+                              );
                           }
-                        );    
+                        );
                     }
-                    
+
                     if (parts[1] === 'send'){
                         console.log('processing SEND selector: ' + selector);
                         var target = parts[0].trim();
@@ -106,7 +104,7 @@
                               }
                             );
                         }
-                              
+
                     }
                 }
 
