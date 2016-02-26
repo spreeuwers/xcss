@@ -93,6 +93,7 @@
 
                               window.addEventListener('message',
                                  function(evt){
+                                    var contentExpr =  /content\s*:\s*['"]\$\{([\w-]+)\}["']/;
                                     console.log('event received: '+  msgKey,'evt:' ,evt.data);
                                     //console.log('event received: ', evt.data );
                                     var elms = document.querySelectorAll(target);
@@ -113,6 +114,11 @@
                                                 },parms
                                             );
                                             elms[i].style.cssText = cssText.replace(/"/g,'').replace(/=/g,': ').replace(/&/g,';\n');
+
+                                            var matches = cssRules[selector].style.cssText.match(contentExpr);
+                                            if (matches && matches[1]){
+                                                elms[i].innerHTML = evt.data[state][matches[1]];
+                                            }
                                         }
                                       } else {
                                         elms[i].style.cssText = elms[i].cssText;
@@ -148,7 +154,7 @@
             var hash = msg.replace(/\./g,'/');
             var parms = '';
             var keys = [];
-            var match = msg.match(/\[(\w+)\]$/);
+            var match = msg.match(/\[([\w-]+)\]$/);
             //copy the specified (attribute) value into the hash param
             if (match && match[1] !== undefined ) {
                 keys = match[1].split(',');

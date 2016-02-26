@@ -30,6 +30,7 @@
         }
         #btn1 CLICK .buttonclicked {}
         #btn2 CLICK ~buttonclicked {}
+        #btn3 CLICK btn3clicked[data-value] {}
 
         #myrange CHANGE rotate[value] {}
 
@@ -41,8 +42,8 @@
             transform:rotate(45deg);
 
         }
-        #dlg1 WHEN buttonclicked{
-            transform:rotate(45deg);
+        #dlg1 WHEN btn3clicked[data-value]{
+            content:"${data-value}";
         }
         #dlg1 WHEN rotate[transform="rotate(${value}deg)"] {
             transform:rotate(270deg);
@@ -57,6 +58,7 @@
   <div id="dlg1" class="my-dialog">hi there it's xcss</div>
   <button id='btn1' data-value="hello">press add</button>
   <button id='btn2' data-value="hello">press del</button>
+  <button id='btn3' data-value="hello">html content</button>
   <input id="mytext" value="hi" style="background-color:red"><br>
   <br>
   <input id="mycheck" type="checkbox" value="chk1">checkbox
