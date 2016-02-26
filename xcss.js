@@ -164,7 +164,9 @@
             if ( hash.indexOf('/') === 0 ) {
                 location.hash +=  hash + parms;
             } else if (hash.indexOf('~') === 0){
-                location.hash =  (location.hash||'').replace( (hash||'').replace(/~\s*/,'/') );
+                var pattern = (hash||'').replace(/~\s*/,'/');
+                var oldhash = (location.hash||'');
+                location.hash =  oldhash.replace(pattern,'' );
             }else {
                 location.hash = hash + parms;
             }
