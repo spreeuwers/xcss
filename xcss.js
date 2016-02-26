@@ -10,22 +10,17 @@
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
     window.addEventListener('hashchange',stateChanged);
+    stateChanged();
     return;
 
     function stateChanged(){
         var state = {};
         var parts = location.hash.split('?');
-        var keys = parts[0].replace(/#\/?/,'').split('/');
+        var path = parts[0].replace(/#\/?/,'');
         var parms =(parts[1]||'').split('&');
-        console.log('state:' + keys);
+        var result = state[path] = {};
+        console.log('path:' + path);
 
-        var result = keys.reduce(
-           function(prev, key){
-               prev[key] = {};
-               return prev[key];
-
-           },state
-        );
 
         parms.forEach(function(parm){
             var keyVal = parm.split('=');
@@ -36,8 +31,7 @@
             }
         });
 
-        console.log('location.search:'+ location.search);
-        console.log('state:' , state, location.search);
+        console.log('state:' , state);
         postMessage(state, location.href);
     }
 
@@ -107,7 +101,9 @@
                                       if ( elms[i].cssText === undefined) {
                                         elms[i].cssText = elms[i].style.cssText || '';
                                       }
-                                      if ( evt.data[state] ){
+                                      var pattern =  new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g,'.*').replace(/>/g,'\/') + '$' );
+                                      var path = Object.keys(evt.data||{})[0]||'';
+                                      if ( pattern.test(path) ){
                                         elms[i].style.cssText = cssRules[selector].style.cssText;
                                         //If a template css is specified as argument
                                         if ( parms ) {
@@ -132,7 +128,7 @@
                     if (EVENTS.indexOf(event) >= 0){
                         console.log('processing EVENT selector: ' + selector  +  'for event: ' +  event );
                         var targets = parts[0].trim();
-                        var key = parts[2].trim().replace('.','/');
+                        var key = parts[2].trim();
                         console.log('binding message events: ' + msg + ' to ' +  targets);
                         var elms = document.querySelectorAll(targets);
                         for ( var i=0; i < elms.length; i++ ){
@@ -149,8 +145,7 @@
 
     function makeEventListener (msg){
         return function(evt) {
-            location.hash = msg;
-            var state = msg;
+            var hash = msg.replace(/\./g,'/');
             var parms = '';
             var keys = [];
             var match = msg.match(/\[(\w+)\]$/);
@@ -163,13 +158,13 @@
 
                 }).join('&');
 
-                state = msg.split('[')[0];
+                hash = msg.split('[')[0];
             }
 
-            if ( state.indexOf('.') === 0 ) {
-                location.hash +=  state.replace('.','/') + parms;
+            if ( hash.indexOf('/') === 0 ) {
+                location.hash +=  hash + parms;
             } else {
-                location.hash = state + parms;
+                location.hash = hash + parms;
             }
             console.log('new Hash: ' + location.hash );
 
