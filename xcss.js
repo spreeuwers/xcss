@@ -5,7 +5,7 @@
     var visitedRules = {};
     var WHEN = 'when';
     var EVENTS = 'click,dblclick,blur,change,mouseover,mouseout'.split(',');
-    var KEYWORDS = /\s+(EXTENDS|CLICK|DBLCLICK|BLUR|CHANGE|WHEN)\s+/i;
+    var KEYWORDS = /\s+(EXTENDS|WHEN|CLICK|DBLCLICK|BLUR|CHANGE|DRAG|DROP|DRAGSTART|DRAGEND|MOUSEOVER|MOUSEOUT)\s+/i;
     var styleSheet = addNewStylesheet();
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
@@ -93,7 +93,7 @@
 
                               window.addEventListener('message',
                                  function(evt){
-                                    var contentExpr =  /content\s*:\s*['"]\$\{([\w-]+)\}["']/;
+                                    var contentExpr =  /content\s*:\s*('[^']*'|"[^"]*")/;
                                     console.log('event received: '+  msgKey,'evt:' ,evt.data);
                                     //console.log('event received: ', evt.data );
                                     var elms = document.querySelectorAll(target);
@@ -117,7 +117,11 @@
 
                                             var matches = cssRules[selector].style.cssText.match(contentExpr);
                                             if (matches && matches[1]){
-                                                elms[i].innerHTML = evt.data[state][matches[1]];
+                                                var content = matches[1];
+                                                var placeholder =new RegExp('\\$\\{'+ parms + '\\}','g');
+                                                var replacer = evt.data[state][parms];
+                                                content = content.replace(placeholder,replacer);
+                                                elms[i].innerHTML = content;
                                             }
                                         }
                                       } else {
