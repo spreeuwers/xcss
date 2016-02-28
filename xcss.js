@@ -120,9 +120,21 @@
                                                 var content = matches[1];
                                                 var placeholder =new RegExp('\\$\\{'+ parms + '\\}','g');
                                                 var replacer = evt.data[state][parms];
+                                                var elm = elms[i];
                                                 content = content.replace(placeholder,replacer);
-                                                elms[i].innerHTML = content;
-                                            }
+                                                if (matches = content.match(/^"fetch\('([^)]*)'\)"$/) ){
+                                                   fetch(matches[1]).then(
+                                                      function(response){
+                                                         
+                                                         response.text().then(function(data) {  
+                                                           console.log(data);
+                                                           elm.innerHTML = data;  
+                                                         });        
+                                                     }
+                                                   );   
+                                                } else {
+                                                   elm.innerHTML = content;
+                                                }                                            }
                                         }
                                       } else {
                                         elms[i].style.cssText = elms[i].cssText;
