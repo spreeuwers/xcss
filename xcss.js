@@ -5,8 +5,15 @@
     var visitedRules = {};
     var WHEN = 'when';
     var EXTENDS ='extends';
-    var EVENTS = 'click,dblclick,blur,change,mouseover,mouseout'.split(',');
-    var KEYWORDS = /\s+(EXTENDS|WHEN|CLICK|DBLCLICK|BLUR|CHANGE|DRAG|DROP|DRAGSTART|DRAGEND|MOUSEOVER|MOUSEOUT)\s+/i;
+    var EVENTS =[];
+    for (var evtKey in HTMLElement.prototype) {
+        if (evtKey.indexOf('on')===0){
+            EVENTS.push(evtKey.substr(2));
+            console.log(evtKey);}
+    }
+    //var EVENTS = 'click,dblclick,blur,change,mouseover,mouseout'.split(',');
+    //var KEYWORDS = /\s+(EXTENDS|WHEN|CLICK|DBLCLICK|BLUR|CHANGE|DRAG|DROP|DRAGSTART|DRAGEND|MOUSEOVER|MOUSEOUT|KEYUP|KEYDOWN|KEYPRESS)\s+/i;
+    var KEYWORDS = new RegExp('\\s+(EXTENDS|WHEN|' + EVENTS.join('|')+ ')\\s+','i');
     var styleSheet = addNewStylesheet();
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
@@ -126,16 +133,16 @@
                                                 if (matches = content.match(/^"fetch\('([^)]*)'\)"$/) ){
                                                    fetch(matches[1]).then(
                                                       function(response){
-                                                         
-                                                         response.text().then(function(data) {  
+
+                                                         response.text().then(function(data) {
                                                            console.log(data);
-                                                           elm.innerHTML = data;  
-                                                         });        
+                                                           elm.innerHTML = data;
+                                                         });
                                                      }
-                                                   );   
+                                                   );
                                                 } else {
                                                    elm.innerHTML = content.split(/[''"]/)[1];
-                                                }                         
+                                                }
                                             }
                                         }
                                       } else {
