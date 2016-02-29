@@ -126,7 +126,8 @@
                                                   return prev.replace('${'+ key + '}',evt.data[state][key]);
                                                 },parms
                                             );
-                                            elms[i].style.cssText = cssText.replace(/"/g,'').replace(/=/g,': ').replace(/&/g,';\n');
+                                            var newCssText = cssText.replace(/["']/g,'').replace(/=/g,': ').replace(/&/g,';\n');
+                                            elms[i].style.cssText = newCssText;
 
                                             var matches = cssRules[selector].style.cssText.match(contentExpr);
                                             if (matches && matches[1]){
