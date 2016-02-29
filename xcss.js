@@ -4,6 +4,7 @@
     var allCSSRules = {};
     var visitedRules = {};
     var WHEN = 'when';
+    var EXTENDS ='extends';
     var EVENTS = 'click,dblclick,blur,change,mouseover,mouseout'.split(',');
     var KEYWORDS = /\s+(EXTENDS|WHEN|CLICK|DBLCLICK|BLUR|CHANGE|DRAG|DROP|DRAGSTART|DRAGEND|MOUSEOVER|MOUSEOUT)\s+/i;
     var styleSheet = addNewStylesheet();
@@ -59,7 +60,7 @@
                 var parts = selector.split(KEYWORDS);
                 console.log('parts: [' + parts.join(' : '), '] selector:',selector);
                 if (parts.length > 2) {
-                    if (parts[1] === 'extends' ){
+                    if (parts[1].toLowerCase() === EXTENDS ){
                         console.log('processing EXTENDS selector: ' + selector);
                         var dest = parts[0].trim();
                         var from = parts[2].trim().split(/\s*,\s*/).map(
@@ -79,7 +80,7 @@
                     }
 
 
-                    if (parts[1] === WHEN){
+                    if (parts[1].toLowerCase() === WHEN){
                         console.log('processing WHEN selector: ' + selector);
                         var target = parts[0].trim();
                         var msg = parts[2].trim().split(/\s*,\s*/).forEach(
@@ -133,8 +134,9 @@
                                                      }
                                                    );   
                                                 } else {
-                                                   elm.innerHTML = content;
-                                                }                                            }
+                                                   elm.innerHTML = content.split(/[''"]/)[1];
+                                                }                         
+                                            }
                                         }
                                       } else {
                                         elms[i].style.cssText = elms[i].cssText;
@@ -146,7 +148,7 @@
                         );
                     }
 
-                    var event = parts[1];
+                    var event = parts[1].toLowerCase();
                     if (EVENTS.indexOf(event) >= 0){
                         console.log('processing EVENT selector: ' + selector  +  'for event: ' +  event );
                         var targets = parts[0].trim();
@@ -184,7 +186,7 @@
             }
 
             if ( hash.indexOf('/') === 0 ) {
-                location.hash +=  hash + parms;
+                location.hash = location.hash.split('?')[0] + hash + parms;
             } else if (hash.indexOf('~') === 0){
                 var pattern = (hash||'').replace(/~\s*/,'/');
                 var oldhash = (location.hash||'');
