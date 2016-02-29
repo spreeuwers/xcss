@@ -34,8 +34,13 @@
             var keyVal = parm.split('=');
             var  key = keyVal[0];
             var  val = keyVal[1];
-            if (key){
-              result[key] = val;
+            if (key) {
+                if (/<script/i.test(val)) {
+                   //prevent injection
+                   console.error('script tag not allowed!');
+                } else {
+                   result[key] = val;
+                }
             }
         });
 
