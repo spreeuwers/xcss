@@ -6,6 +6,7 @@
     var evtBindings = {};
     var WHEN = 'when';
     var EXTENDS = 'extends';
+    var APPLIES = 'applies';
     var EVENTS = [];
     //fetch all possible events
     for (var evtKey in HTMLElement.prototype) {
@@ -15,7 +16,7 @@
         }
     }
     //make keyword split expression
-    var KEYWORDS = new RegExp('\\s+(EXTENDS|WHEN|' + EVENTS.join('|') + ')\\s+', 'i');
+    var KEYWORDS = new RegExp('\\s+(EXTENDS|APPLIES|WHEN|' + EVENTS.join('|') + ')\\s+', 'i');
     var styleSheet = addNewStylesheet();
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
@@ -125,6 +126,17 @@
                         );
                     }
 
+
+                    if (parts[1].toLowerCase() === APPLIES) {
+                        console.log('processing APPLIES selector: ' + selector);
+                        var target = parts[0].trim();
+                        var classNames = parts[2];
+                        var elms = document.querySelectorAll(target);
+                        for (var i = 0; i < elms.length; i++) {
+                             console.log('applying' + classNames);
+                             elms[i].classList.add( classNames);
+                        }
+                    }
                     var event = parts[1].toLowerCase();
                     if (EVENTS.indexOf(event) >= 0) {
                         console.log('processing EVENT selector: ' + selector + 'for event: ' + event);

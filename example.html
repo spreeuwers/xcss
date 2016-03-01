@@ -28,6 +28,9 @@
             left:50%;
 
         }
+
+        .dlg APPLIES my-dialog {}
+        
         #btn1 CLICK .buttonclicked {}
         #btn2 CLICK ~buttonclicked {}
         #btn3 CLICK btn3clicked[data-value] {}
@@ -91,7 +94,7 @@
     </script>
 </head>
 <body>
-  <div id="dlg1" class="my-dialog">hi there it's xcss</div>
+  <div id="dlg1" class="dlg">hi there it's xcss</div>
   <button id='btn1' data-value="hello">add buttonclicked</button>
   <button id='btn2' data-value="hello">del buttonclicked</button>
   <button id='btn3' data-value="hello">html content</button><br><br>
