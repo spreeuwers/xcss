@@ -1,0 +1,6 @@
+button[action="registreer"] CLICK register[action] {}
+button[action="loadComments"] CLICK load[action] {}
+
+form[name="register"] textarea WHEN load[action]{
+    content:"fetch('comments.txt')';
+}
