@@ -3,62 +3,71 @@
     "use strict";
     var allCSSRules = {};
     var visitedRules = {};
-    var evtBindings={};
+    var evtBindings = {};
     var WHEN = 'when';
-    var EXTENDS ='extends';
-    var EVENTS =[];
+    var EXTENDS = 'extends';
+    var EVENTS = [];
+    //fetch all possible events
     for (var evtKey in HTMLElement.prototype) {
-        if (evtKey.indexOf('on')===0){
+        if (evtKey.indexOf('on') === 0) {
             EVENTS.push(evtKey.substr(2));
-            console.log(evtKey);}
+            console.log(evtKey);
+        }
     }
-    //var EVENTS = 'click,dblclick,blur,change,mouseover,mouseout'.split(',');
-    //var KEYWORDS = /\s+(EXTENDS|WHEN|CLICK|DBLCLICK|BLUR|CHANGE|DRAG|DROP|DRAGSTART|DRAGEND|MOUSEOVER|MOUSEOUT|KEYUP|KEYDOWN|KEYPRESS)\s+/i;
-    var KEYWORDS = new RegExp('\\s+(EXTENDS|WHEN|' + EVENTS.join('|')+ ')\\s+','i');
+    //make keyword split expression
+    var KEYWORDS = new RegExp('\\s+(EXTENDS|WHEN|' + EVENTS.join('|') + ')\\s+', 'i');
     var styleSheet = addNewStylesheet();
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
-    window.addEventListener('hashchange',stateChanged);
+    window.addEventListener('hashchange', stateChanged);
     stateChanged();
     return;
 
-    function stateChanged(){
+    function stateChanged() {
         var state = {};
         var parts = location.hash.split('?');
-        var path = parts[0].replace(/#\/?/,'');
-        var parms =(parts[1]||'').split('&');
+        var path = parts[0].replace(/#\/?/, '');
+        var parms = (parts[1] || '').split('&');
         var result = state[path] = {};
         console.log('path:' + path);
 
 
-        parms.forEach(function(parm){
+        parms.forEach(function (parm) {
             var keyVal = parm.split('=');
-            var  key = keyVal[0];
-            var  val = keyVal[1];
+            var key = keyVal[0];
+            var val = keyVal[1];
             if (key) {
                 if (/<script/i.test(val)) {
-                   //prevent injection
-                   console.error('script tag not allowed!');
+                    //prevent injection
+                    console.error('script tag not allowed!');
                 } else {
-                   result[key] = val;
+                    result[key] = val;
                 }
             }
         });
-
-        Object.keys(evtBindings).forEach(
-           function bind(target) {
-              //console.log('binding message events: ' + msg + ' to ' +  targets);
-              var elms = document.querySelectorAll(target);
-              for ( var i=0; i < elms.length; i++ ){
-                   //elms[i].addEventListener(event, makeEventListener(key));
-                   var key = evtBindings[target];
-                   console.log('binding message events: ' + key + ' to ' +  target);
-                   elms[i].addEventListener(event, makeEventListener(key));
-              }
-           }
-        );
-        console.log('state:' , state);
+        console.log('state:', state);
         postMessage(state, location.href);
+    }
+
+
+    function bindAllEvents() {
+        Object.keys(evtBindings).forEach(
+            function bind(target) {
+                //console.log('binding message events: ' + msg + ' to ' +  targets);
+                var elms = document.querySelectorAll(target);
+                for (var i = 0; i < elms.length; i++) {
+                    //elms[i].addEventListener(event, makeEventListener(key));
+                    var handler = evtBindings[target];
+                    if (!elms[i].xcssHandler) {
+                        console.log('binding message events: ' + handler.hash + ' to ' + target);
+                        elms[i].xcssHandler = makeEventListener(handler.hash);
+                        elms[i].addEventListener(handler.event, elms[i].xcssHandler);
+                    }
+
+
+                }
+            }
+        );
     }
 
     function processCSSRules() {
@@ -77,15 +86,15 @@
         Object.keys(cssRules).forEach(
             function (selector) {
 
-               if (visitedRules[selector]) {
+                if (visitedRules[selector]) {
                     //console.log('skipping visited selector: ' + selector);
                     return;
                 }
                 visitedRules[selector] = cssRules[selector];
                 var parts = selector.split(KEYWORDS);
-                console.log('parts: [' + parts.join(' : '), '] selector:',selector);
+                console.log('parts: [' + parts.join(' : '), '] selector:', selector);
                 if (parts.length > 2) {
-                    if (parts[1].toLowerCase() === EXTENDS ){
+                    if (parts[1].toLowerCase() === EXTENDS) {
                         console.log('processing EXTENDS selector: ' + selector);
                         var dest = parts[0].trim();
                         var from = parts[2].trim().split(/\s*,\s*/).map(
@@ -105,86 +114,108 @@
                     }
 
 
-                    if (parts[1].toLowerCase() === WHEN){
+                    if (parts[1].toLowerCase() === WHEN) {
                         console.log('processing WHEN selector: ' + selector);
                         var target = parts[0].trim();
                         var msg = parts[2].trim().split(/\s*,\s*/).forEach(
-                          function(msgKey){
-                              var msgParts = msgKey.split(/[\[\]]/);
-                              var state = msgParts[0];
-                              var parms = msgParts[1];
-                              var cssText = '';
+                            function (msgKey) {
+                                var msgParts = msgKey.split(/[\[\]]/);
+                                var state = msgParts[0];
+                                var parms = msgParts[1];
+                                var cssText = '';
 
-                              console.log('binding message listener: ' + msgKey);
+                                console.log('binding message listener: ' + msgKey);
 
-                              window.addEventListener('message',
-                                 function(evt){
-                                    var contentExpr =  /content\s*:\s*('[^']*'|"[^"]*")/;
-                                    console.log('event received: '+  msgKey,'evt:' ,evt.data);
-                                    //console.log('event received: ', evt.data );
-                                    var elms = document.querySelectorAll(target);
-                                    for ( var i=0; i < elms.length; i++ ){
-                                      console.log('event handled by ',elms[i].id);
-                                      if ( elms[i].cssText === undefined) {
-                                        elms[i].cssText = elms[i].style.cssText || '';
-                                      }
-                                      var pattern =  new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g,'.*').replace(/>/g,'\/') + '$' );
-                                      var path = Object.keys(evt.data||{})[0]||'';
-                                      if ( pattern.test(path) ){
-                                        elms[i].style.cssText = cssRules[selector].style.cssText;
-                                        //If a template css is specified as argument
-                                        if ( parms ) {
-                                            cssText = Object.keys(evt.data[state]).reduce(
-                                                function(prev, key){
-                                                  return prev.replace('${'+ key + '}',evt.data[state][key]);
-                                                },parms
-                                            );
-                                            var newCssText = cssText.replace(/["']/g,'').replace(/=/g,': ').replace(/&/g,';\n');
-                                            elms[i].style.cssText = newCssText;
+                                window.addEventListener('message',
+                                    function (evt) {
+                                        var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
+                                        console.log('event received: ' + msgKey, 'evt:', evt.data);
+                                        //console.log('event received: ', evt.data );
+                                        var elms = document.querySelectorAll(target);
+                                        for (var i = 0; i < elms.length; i++) {
+                                            console.log('event handled by ', elms[i].id);
+                                            if (elms[i].cssText === undefined) {
+                                                elms[i].cssText = elms[i].style.cssText || '';
+                                            }
+                                            var pattern = new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/') + '$');
+                                            var path = Object.keys(evt.data || {})[0] || '';
+                                            if (pattern.test(path)) {
+                                                elms[i].style.cssText = cssRules[selector].style.cssText;
+                                                //If a template css is specified as argument
+                                                if (parms) {
+                                                    cssText = Object.keys(evt.data[state]).reduce(
+                                                        function (prev, key) {
+                                                            return prev.replace('${' + key + '}', evt.data[state][key]);
+                                                        }, parms
+                                                    );
+                                                    var newCssText = cssText.replace(/["']/g, '').replace(/=/g, ': ').replace(/&/g, ';\n');
+                                                    elms[i].style.cssText = newCssText;
 
-                                            var matches = cssRules[selector].style.cssText.match(contentExpr);
-                                            if (matches && matches[1]){
-                                                var content = matches[1];
-                                                var placeholder =new RegExp('\\$\\{'+ parms + '\\}','g');
-                                                var replacer = evt.data[state][parms];
-                                                var elm = elms[i];
-                                                content = content.replace(placeholder,replacer);
-                                                if (matches = content.match(/^"fetch\('([^)]*)'\)"$/) ){
-                                                   fetch(matches[1]).then(
-                                                      function(response){
+                                                    var matches = cssRules[selector].style.cssText.match(contentExpr);
+                                                    if (matches && matches[1]) {
+                                                        var content = matches[1];
+                                                        var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
+                                                        var replacer = evt.data[state][parms];
+                                                        var elm = elms[i];
+                                                        content = content.replace(placeholder, replacer);
+                                                        if (matches = content.match(/^"fetch\('([^)]*)'\)"$/)) {
+                                                            fetch(matches[1]).then(
+                                                                function (response) {
 
-                                                         response.text().then(function(data) {
-                                                           console.log(data);
-                                                           elm.innerHTML = data;
-                                                         });
-                                                     }
-                                                   );
-                                                } else {
-                                                   elm.innerHTML = content.split(/[''"]/)[1];
+                                                                    response.text().then(function (data) {
+                                                                        console.log(data);
+                                                                        if (elm.tagName === "input" || elm.tagName ==='textarea') {
+                                                                            elm.value  = data;
+                                                                        } else {
+                                                                            //if we has a change in the html rebind all events if needed
+                                                                            //so events bind seems to work as styles whenever an element
+                                                                            //matches the css rule the event is present
+                                                                            elm.innerHTML = data;
+                                                                            bindAllEvents();
+                                                                        }
+
+
+                                                                    });
+                                                                }
+                                                            );
+                                                        } else {
+                                                            var html = content.split(/[''"]/)[1]
+                                                            if (elm.tagName === "input" || elm.tagName ==='textarea') {
+                                                                elm.value  = html;
+                                                            } else {
+                                                                elm.innerHTML = html;
+                                                            }
+                                                            //if we has a change in the html rebind all events if needed
+                                                            //so events bind seems to work as styles whenever an element
+                                                            //matches the css rule the event is present
+                                                            bindAllEvents();
+                                                        }
+                                                    }
                                                 }
+                                            } else {
+                                                elms[i].style.cssText = elms[i].cssText;
                                             }
                                         }
-                                      } else {
-                                        elms[i].style.cssText = elms[i].cssText;
-                                      }
+
                                     }
-                                 }
-                              );
-                          }
+
+                                );
+                            }
                         );
                     }
 
                     var event = parts[1].toLowerCase();
-                    if (EVENTS.indexOf(event) >= 0){
-                        console.log('processing EVENT selector: ' + selector  +  'for event: ' +  event );
+                    if (EVENTS.indexOf(event) >= 0) {
+                        console.log('processing EVENT selector: ' + selector + 'for event: ' + event);
                         var targets = parts[0].trim();
-                        var key = parts[2].trim();
-                        evtBindings[target]=key;
-                        console.log('binding message events: ' + msg + ' to ' +  targets);
+                        var hash = parts[2].trim();
+                        evtBindings[targets] = {hash: hash, event: event};
+                        console.log('binding message events: ' + hash + ' to ' + targets);
                         var elms = document.querySelectorAll(targets);
-                        for ( var i=0; i < elms.length; i++ ){
-                            console.log('adding eventlistener for ' + key);
-                            elms[i].addEventListener(event, makeEventListener(key));
+                        for (var i = 0; i < elms.length; i++) {
+                            console.log('adding eventlistener for ' + hash);
+                            elms[i].xcssHandler = makeEventListener(hash);
+                            elms[i].addEventListener(event, elms[i].xcssHandler);
                         }
 
                     }
@@ -194,14 +225,14 @@
         );
     }
 
-    function makeEventListener (msg){
+    function makeEventListener(msg) {
         return function xcssHandler(evt) {
-            var hash = msg.replace(/\./g,'/');
+            var hash = msg.replace(/\./g, '/');
             var parms = '';
             var keys = [];
             var match = msg.match(/\[([\w-]+)\]$/);
             //copy the specified (attribute) value into the hash param
-            if (match && match[1] !== undefined ) {
+            if (match && match[1] !== undefined) {
                 keys = match[1].split(',');
                 parms = '?' + keys.map(function (key) {
                     var val = evt.srcElement[key] || evt.srcElement.getAttribute(key);
@@ -212,16 +243,16 @@
                 hash = msg.split('[')[0];
             }
 
-            if ( hash.indexOf('/') === 0 ) {
+            if (hash.indexOf('/') === 0) {
                 location.hash = location.hash.split('?')[0] + hash + parms;
-            } else if (hash.indexOf('~') === 0){
-                var pattern = (hash||'').replace(/~\s*/,'/');
-                var oldhash = (location.hash||'');
-                location.hash =  oldhash.replace(pattern,'' );
-            }else {
+            } else if (hash.indexOf('~') === 0) {
+                var pattern = (hash || '').replace(/~\s*/, '/');
+                var oldhash = (location.hash || '');
+                location.hash = oldhash.replace(pattern, '');
+            } else {
                 location.hash = hash + parms;
             }
-            console.log('new Hash: ' + location.hash );
+            console.log('new Hash: ' + location.hash);
 
         };
     }
