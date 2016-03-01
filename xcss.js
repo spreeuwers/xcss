@@ -119,87 +119,8 @@
                         var target = parts[0].trim();
                         var msg = parts[2].trim().split(/\s*,\s*/).forEach(
                             function (msgKey) {
-                                var msgParts = msgKey.split(/[\[\]]/);
-                                var state = msgParts[0];
-                                var parms = msgParts[1];
-                                var cssText = '';
-
                                 console.log('binding message listener: ' + msgKey);
-
-                                window.addEventListener('message',
-                                    function (evt) {
-                                        var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
-                                        console.log('event received: ' + msgKey, 'evt:', evt.data);
-                                        //console.log('event received: ', evt.data );
-                                        var elms = document.querySelectorAll(target);
-                                        for (var i = 0; i < elms.length; i++) {
-                                            console.log('event handled by ', elms[i].id);
-                                            if (elms[i].cssText === undefined) {
-                                                elms[i].cssText = elms[i].style.cssText || '';
-                                            }
-                                            var pattern = new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/') + '$');
-                                            var path = Object.keys(evt.data || {})[0] || '';
-                                            if (pattern.test(path)) {
-                                                elms[i].style.cssText = cssRules[selector].style.cssText;
-                                                //If a template css is specified as argument
-                                                if (parms) {
-                                                    cssText = Object.keys(evt.data[state]).reduce(
-                                                        function (prev, key) {
-                                                            return prev.replace('${' + key + '}', evt.data[state][key]);
-                                                        }, parms
-                                                    );
-                                                    var newCssText = cssText.replace(/["']/g, '').replace(/=/g, ': ').replace(/&/g, ';\n');
-                                                    elms[i].style.cssText = newCssText;
-
-                                                    var matches = cssRules[selector].style.cssText.match(contentExpr);
-                                                    if (matches && matches[1]) {
-                                                        var content = matches[1];
-                                                        var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
-                                                        var replacer = evt.data[state][parms];
-                                                        var elm = elms[i];
-                                                        content = content.replace(placeholder, replacer);
-                                                        if (matches = content.match(/^"fetch\('([^)]*)'\)"$/)) {
-                                                            fetch(matches[1]).then(
-                                                                function (response) {
-
-                                                                    response.text().then(function (data) {
-                                                                        console.log(data);
-                                                                        if (elm.tagName === "input" || elm.tagName ==='textarea') {
-                                                                            elm.value  = data;
-                                                                        } else {
-                                                                            //if we has a change in the html rebind all events if needed
-                                                                            //so events bind seems to work as styles whenever an element
-                                                                            //matches the css rule the event is present
-                                                                            elm.innerHTML = data;
-                                                                            bindAllEvents();
-                                                                        }
-
-
-                                                                    });
-                                                                }
-                                                            );
-                                                        } else {
-                                                            var html = content.split(/[''"]/)[1]
-                                                            if (elm.tagName === "input" || elm.tagName ==='textarea') {
-                                                                elm.value  = html;
-                                                            } else {
-                                                                elm.innerHTML = html;
-                                                            }
-                                                            //if we has a change in the html rebind all events if needed
-                                                            //so events bind seems to work as styles whenever an element
-                                                            //matches the css rule the event is present
-                                                            bindAllEvents();
-                                                        }
-                                                    }
-                                                }
-                                            } else {
-                                                elms[i].style.cssText = elms[i].cssText;
-                                            }
-                                        }
-
-                                    }
-
-                                );
+                                window.addEventListener('message', makeStateChangeListener(target, msgKey, selector, cssRules));
                             }
                         );
                     }
@@ -224,6 +145,95 @@
             }
         );
     }
+
+    function makeStateChangeListener(targetKey, msgKey, selector, cssRules) {
+
+        console.log('makeStateChangeListener for: ' + targetKey + ', msgKey: ' +  msgKey);
+
+        var msgParts = msgKey.split(/[\[\]]/);
+        var state = msgParts[0];
+        var parms = msgParts[1];
+        var cssText = '';
+        var target = targetKey + '';
+
+        return stateChangeListener;
+
+        ////////////////////////////////////////////////////////
+
+        function stateChangeListener(evt) {
+            var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
+            console.log('event received: ' + msgKey, 'evt:', evt.data);
+            //console.log('event received: ', evt.data );
+            var elms = document.querySelectorAll(target);
+            for (var i = 0; i < elms.length; i++) {
+                console.log('event handled by ', elms[i].id);
+                if (elms[i].cssText === undefined) {
+                    elms[i].cssText = elms[i].style.cssText || '';
+                }
+                var pattern = new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/') + '$');
+                var path = Object.keys(evt.data || {})[0] || '';
+                if (pattern.test(path)) {
+                    elms[i].style.cssText = cssRules[selector].style.cssText;
+                    //If a template css is specified as argument
+                    if (parms) {
+                        cssText = Object.keys(evt.data[state]).reduce(
+                            function (prev, key) {
+                                return prev.replace('${' + key + '}', evt.data[state][key]);
+                            }, parms
+                        );
+                        var newCssText = cssText.replace(/["']/g, '').replace(/=/g, ': ').replace(/&/g, ';\n');
+                        elms[i].style.cssText = newCssText;
+
+                        var matches = cssRules[selector].style.cssText.match(contentExpr);
+                        if (matches && matches[1]) {
+                            var content = matches[1];
+                            var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
+                            var replacer = evt.data[state][parms];
+                            var elm = elms[i];
+                            content = content.replace(placeholder, replacer);
+                            if (matches = content.match(/^"fetch\('([^)]*)'\)"$/)) {
+                                fetch(matches[1]).then(
+                                    function (response) {
+
+                                        response.text().then(function (data) {
+                                            console.log(data);
+                                            if (elm.tagName === "input" || elm.tagName === 'textarea') {
+                                                elm.value = data;
+                                            } else {
+                                                //if we has a change in the html rebind all events if needed
+                                                //so events bind seems to work as styles whenever an element
+                                                //matches the css rule the event is present
+                                                elm.innerHTML = data;
+                                                bindAllEvents();
+                                            }
+
+
+                                        });
+                                    }
+                                );
+                            } else {
+                                var html = content.split(/[''"]/)[1]
+                                if (elm.tagName === "input" || elm.tagName === 'textarea') {
+                                    elm.value = html;
+                                } else {
+                                    elm.innerHTML = html;
+                                }
+                                //if we has a change in the html rebind all events if needed
+                                //so events bind seems to work as styles whenever an element
+                                //matches the css rule the event is present
+                                bindAllEvents();
+                            }
+                        }
+                    }
+                } else {
+                    elms[i].style.cssText = elms[i].cssText;
+                }
+            }
+
+        }
+
+    }
+
 
     function makeEventListener(msg) {
         return function xcssHandler(evt) {
