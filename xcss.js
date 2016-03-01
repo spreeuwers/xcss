@@ -3,6 +3,7 @@
     "use strict";
     var allCSSRules = {};
     var visitedRules = {};
+    var evtBindings={};
     var WHEN = 'when';
     var EXTENDS ='extends';
     var EVENTS =[];
@@ -44,6 +45,18 @@
             }
         });
 
+        Object.keys(evtBindings).forEach(
+           function bind(target) {
+              //console.log('binding message events: ' + msg + ' to ' +  targets);
+              var elms = document.querySelectorAll(target);
+              for ( var i=0; i < elms.length; i++ ){
+                   //elms[i].addEventListener(event, makeEventListener(key));
+                   var key = evtBindings[target];
+                   console.log('binding message events: ' + key + ' to ' +  target);
+                   elms[i].addEventListener(event, makeEventListener(key));
+              }
+           }
+        );
         console.log('state:' , state);
         postMessage(state, location.href);
     }
@@ -166,6 +179,7 @@
                         console.log('processing EVENT selector: ' + selector  +  'for event: ' +  event );
                         var targets = parts[0].trim();
                         var key = parts[2].trim();
+                        evtBindings[target]=key;
                         console.log('binding message events: ' + msg + ' to ' +  targets);
                         var elms = document.querySelectorAll(targets);
                         for ( var i=0; i < elms.length; i++ ){
@@ -181,7 +195,7 @@
     }
 
     function makeEventListener (msg){
-        return function(evt) {
+        return function xcssHandler(evt) {
             var hash = msg.replace(/\./g,'/');
             var parms = '';
             var keys = [];
