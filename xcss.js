@@ -154,15 +154,14 @@
                     }
 
                     else if (keyword === APPLIES) {
-                        console.log('processing APPLIES selector: ' + selector);
+
                         //parts.forEach
                         targetElms = document.querySelectorAll(target);
                         [].slice.call(targetElms).forEach(
                             function (elm) {
-                                console.log('applying' + sources);
                                 sources.forEach(
                                     function (className) {
-                                        console.log('applying' + className);
+                                        console.log('applying ' + className + ' to ' + target);
                                         elm.classList.add(className);
 
                                     }
