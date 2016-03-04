@@ -360,11 +360,14 @@
             }
 
             if (hash.indexOf('/') === 0) {
+                //add state name to path
                 location.hash = location.hash.split('?')[0] + hash + parms;
             } else if (hash.indexOf('~') === 0) {
+                //delete state name from path
                 pattern = (hash || '').replace(/~\s*/, '/');
                 location.hash = (location.hash || '').replace(pattern, '');
             } else if (hash.indexOf('>') === 0) {
+                 //replace last state name in path
                  pattern = (hash || '').replace(/>\s*/, '/');
                 location.hash = location.hash.split('?')[0].split('/').slice(0,-1).join('/').replace(/[\/]+$/,'') + pattern;
             } else {
