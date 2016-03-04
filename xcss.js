@@ -12,25 +12,23 @@
     var EVENTS = [];
 
     var _KEYWORDS_ = {
-        EXTENDS: function () {
-        },
-        APPLIES: function () {
-        },
-        WHEN: function () {
-        },
-        AND: function () {
-        }
+        EXTENDS: function () { },
+        APPLIES: function () { },
+        WHEN: function () { },
+        AND: function () { },
+        OR: function () { }
     };
 
     //fetch all possible events
     for (var evtKey in HTMLElement.prototype) {
         if (evtKey.indexOf('on') === 0) {
             EVENTS.push(evtKey.substr(2));
-            console.log(evtKey);
+            //console.log(evtKey);
         }
     }
     //make keyword split expression
-    var KEYWORDS = new RegExp('\\s+(EXTENDS|APPLIES|WHEN|AND|' + EVENTS.join('|') + ')\\s+', 'i');
+    var keyWordsRegExp = Object.keys(_KEYWORDS_).concat(EVENTS).join('|');
+    var KEYWORDS = new RegExp('\\s+(' + keyWordsRegExp + ')\\s+', 'i');
     var styleSheet = addNewStylesheet();
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
