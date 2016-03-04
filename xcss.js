@@ -10,13 +10,14 @@
     var EXTENDS = 'extends';
     var APPLIES = 'applies';
     var EVENTS = [];
+    var LOGICAL = 'LOGICAL';
 
     var _KEYWORDS_ = {
-        EXTENDS: function () { },
-        APPLIES: function () { },
-        WHEN: function () { },
-        AND: function () { },
-        OR: function () { }
+        EXTENDS: 'RULE',
+        APPLIES: 'RULE',
+        WHEN: 'EVENTLISTENER',
+        AND: 'LOGICAL',
+        OR: 'LOGICAL'
     };
 
     //fetch all possible events
@@ -98,7 +99,7 @@
     function extendRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
-                var keyword, target, source, newCssText, sources,targetElms;
+                var keyword, target, source, newCssText, sources,targetElms,invalidKeyword;
                 var parts = selector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
@@ -109,15 +110,28 @@
 
                 console.log('parts: [' + parts.join(' : '), '] selector:', selector);
 
+                //initially the rule is valid
+                invalidKeyword = '';
+
                 if (parts.length > 2) {
                     //read first thre fields
                     target = parts.shift().trim();
                     keyword = parts.shift().trim();
+
                     sources = parts.filter(
                         function (part) {
-                            return (!_KEYWORDS_[part.toUpperCase()]);
+                            var keyword = part.toUpperCase();
+                            var keywordType = _KEYWORDS_[keyword];
+                            invalidKeyword = (keywordType && LOGICAL !== keywordType) ? keyword : invalidKeyword;
+                            return !keywordType;
                         }
                     );
+
+                    if (invalidKeyword) {
+                        console.error('cannot proces invalid xcss rule: "' + selector + '" unexpected keyword "' + invalidKeyword + '"');
+                        return;
+                    }
+
 
                     if (keyword === EXTENDS) {
                         console.log('processing EXTENDS selector: ' + selector);
