@@ -12,7 +12,7 @@
     var EVENTS = [];
     var LOGICAL = 'LOGICAL';
 
-    var _KEYWORDS_ = {
+    var KEYWORD_FUNCTIONS = {
         EXTENDS: extendRule,
         APPLIES: applyRule,
         WHEN: stateRule,
@@ -28,7 +28,7 @@
         }
     }
     //make keyword split expression
-    var keyWordsRegExp = Object.keys(_KEYWORDS_).concat(EVENTS).join('|');
+    var keyWordsRegExp = Object.keys(KEYWORD_FUNCTIONS).concat(EVENTS).join('|');
     var KEYWORDS = new RegExp('\\s+(' + keyWordsRegExp + ')\\s+', 'i');
     var styleSheet = addNewStylesheet();
 
@@ -102,7 +102,7 @@
     function compileRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
-                var keyword, target, source, newCssText, sources,targetElms,invalidKeyword;
+                var keyword, target, source, newCssText, sources,targetElms,invalidKeyword,ucKeyword;
                 var parts = selector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
@@ -120,11 +120,11 @@
                     //read first thre fields
                     target = parts.shift().trim();
                     keyword = parts.shift().trim();
+                    ucKeyword = keyword.toUpperCase();
 
                     sources = parts.filter(
                         function (part) {
-                            var keyword = part.toUpperCase();
-                            var keywordType = _KEYWORDS_[keyword];
+                            var keywordType = KEYWORD_FUNCTIONS[part.toUpperCase()];
                             invalidKeyword = (keywordType && LogicKeyword !== keywordType) ? keyword : invalidKeyword;
                             return !keywordType;
                         }
@@ -136,19 +136,10 @@
                     }
 
 
-                    if (keyword === EXTENDS) {
-                        extendRule(cssRules, selector, target, sources, keyword);
+                    if (KEYWORD_FUNCTIONS[ucKeyword]) {
+                        //apply the right function for a keyword
+                        KEYWORD_FUNCTIONS[ucKeyword](cssRules, selector, target, sources, keyword);
                     }
-
-                    else if (keyword === APPLIES) {
-
-                        applyRule(cssRules, selector, target, sources, keyword);
-                    }
-
-                    else if (keyword === WHEN) {
-                        stateRule(cssRules, selector, target, sources, keyword);
-                    }
-
 
                     else if (EVENTS.indexOf(keyword) >= 0) {
                         eventRule(cssRules, selector, target, sources, keyword);
@@ -164,6 +155,8 @@
     */
     function extendRule(cssRules, selector, target, sources, keyword) {
         console.log('processing EXTENDS selector: ' + selector);
+        console.log('processing EXTENDS sources: ' + sources);
+
 
         var newCssText = sources.map(
             function (fromSelector) {
@@ -171,6 +164,11 @@
                 if (!cssRules[fromSelector]) {
                     console.log('resolving rule fromSelector: ' + fromSelector);
                     compileRules(cssRules);
+                }
+                if (!cssRules[fromSelector]) {
+                    console.error('Could not resolve rule fromSelector: ' + fromSelector);
+                } else {
+                    console.debug('Resolved rule fromSelector: ' + fromSelector + ' = ' +  cssRules[fromSelector].style.cssText );
                 }
                 return (cssRules[fromSelector]) ? cssRules[fromSelector].style.cssText : '';
             }
