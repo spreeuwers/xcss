@@ -13,11 +13,11 @@
     var LOGICAL = 'LOGICAL';
 
     var _KEYWORDS_ = {
-        EXTENDS: 'RULE',
-        APPLIES: 'RULE',
-        WHEN: 'EVENTLISTENER',
-        AND: 'LOGICAL',
-        OR: 'LOGICAL'
+        EXTENDS: extendRule,
+        APPLIES: applyRule,
+        WHEN: stateRule,
+        AND: LogicKeyword,
+        OR: LogicKeyword
     };
 
     //fetch all possible events
@@ -84,19 +84,22 @@
         );
     }
 
+    /**
+     *
+     */
     function processCSSRules() {
         //collect all style rules
         console.time('inheritCSSRules');
         collectRules(document);
-        //console.log(allCSSRules);
-        extendRules(allCSSRules);
-
-        //console.log(styleSheet);
+        compileRules(allCSSRules);
         console.timeEnd('inheritCSSRules');
     }
 
-
-    function extendRules(cssRules) {
+    /**
+     *
+     * @param cssRules
+     */
+    function compileRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
                 var keyword, target, source, newCssText, sources,targetElms,invalidKeyword;
@@ -122,7 +125,7 @@
                         function (part) {
                             var keyword = part.toUpperCase();
                             var keywordType = _KEYWORDS_[keyword];
-                            invalidKeyword = (keywordType && LOGICAL !== keywordType) ? keyword : invalidKeyword;
+                            invalidKeyword = (keywordType && LogicKeyword !== keywordType) ? keyword : invalidKeyword;
                             return !keywordType;
                         }
                     );
@@ -134,66 +137,21 @@
 
 
                     if (keyword === EXTENDS) {
-                        console.log('processing EXTENDS selector: ' + selector);
-
-                        newCssText = sources.map(
-                            function (fromSelector) {
-                                //resolve fromSelector when not found in currenttly resolved rules
-                                if (!cssRules[fromSelector]) {
-                                    console.log('resolving rule fromSelector: ' + fromSelector);
-                                    extendRules(cssRules);
-                                }
-                                return (cssRules[fromSelector]) ? cssRules[fromSelector].style.cssText : '';
-                            }
-                        ).join(' ');
-
-                        var self = cssRules[selector];
-                        console.log('adding rule: ' + target + '{' + self.style.cssText + newCssText + '}');
-                        var idx = styleSheet.insertRule(target + '{' + self.style.cssText + newCssText + '}', styleSheet.cssRules.length);
-                        cssRules[target] = styleSheet.cssRules[idx];
+                        extendRule(cssRules, selector, target, sources, keyword);
                     }
 
                     else if (keyword === APPLIES) {
 
-                        //parts.forEach
-                        targetElms = document.querySelectorAll(target);
-                        [].slice.call(targetElms).forEach(
-                            function (elm) {
-                                sources.forEach(
-                                    function (className) {
-                                        console.log('applying ' + className + ' to ' + target);
-                                        elm.classList.add(className);
-
-                                    }
-                                );
-                            }
-                        );
+                        applyRule(cssRules, selector, target, sources, keyword);
                     }
 
                     else if (keyword === WHEN) {
-                        console.log('binding message WHEN listener: ' + sources + ' to ' + selector);
-
-                        sources.forEach(
-                            function (hashState) {
-                                console.log('binding message listener: ' + hashState);
-                                window.addEventListener('message', makeStateChangeListener(target, hashState, selector, cssRules));
-                            }
-                        );
+                        stateRule(cssRules, selector, target, sources, keyword);
                     }
 
 
                     else if (EVENTS.indexOf(keyword) >= 0) {
-                        var newHash = sources[0] || keyword;
-                        console.log('binding message events: ' + source + ' to ' + target + ' for ' + keyword);
-                        evtBindings[target] = {hash: newHash, event: keyword};
-                        targetElms = document.querySelectorAll(target);
-                        [].slice.call(targetElms).forEach(
-                            function (elm) {
-                                console.log('adding eventlistener for ' + newHash);
-                                elm.xcssHandler = makeEventListener(newHash);
-                                elm.addEventListener(keyword, elm.xcssHandler);
-                            }
-                        );
+                        eventRule(cssRules, selector, target, sources, keyword);
 
                     }
                 }
@@ -201,6 +159,97 @@
             }
         );
     }
+
+    /**
+    */
+    function extendRule(cssRules, selector, target, sources, keyword) {
+        console.log('processing EXTENDS selector: ' + selector);
+
+        var newCssText = sources.map(
+            function (fromSelector) {
+                //resolve fromSelector when not found in currenttly resolved rules
+                if (!cssRules[fromSelector]) {
+                    console.log('resolving rule fromSelector: ' + fromSelector);
+                    compileRules(cssRules);
+                }
+                return (cssRules[fromSelector]) ? cssRules[fromSelector].style.cssText : '';
+            }
+        ).join(' ');
+
+        var self = cssRules[selector];
+        console.log('adding rule: ' + target + '{' + self.style.cssText + newCssText + '}');
+        var idx = styleSheet.insertRule(target + '{' + self.style.cssText + newCssText + '}', styleSheet.cssRules.length);
+        cssRules[target] = styleSheet.cssRules[idx];
+    }
+
+
+    function applyRule(cssRules, selector, target, sources, keyword) {
+
+         var targetElms = document.querySelectorAll(target);
+        [].slice.call(targetElms).forEach(
+            function (elm) {
+                sources.forEach(
+                    function (className) {
+                        console.log('applying ' + className + ' to ' + target);
+                        elm.classList.add(className);
+
+                    }
+                );
+            }
+        );
+    }
+
+    /**
+     *
+     * @param cssRules
+     * @param selector
+     * @param target
+     * @param sources
+     * @param keyword
+     */
+    function stateRule(cssRules, selector, target, sources, keyword) {
+        console.log('binding message WHEN listener: ' + sources + ' to ' + selector);
+
+        sources.forEach(
+            function (hashState) {
+                console.log('binding message listener: ' + hashState);
+                window.addEventListener('message', makeStateChangeListener(target, hashState, selector, cssRules));
+            }
+        );
+    }
+
+    /**
+     *
+     * @param cssRules
+     * @param selector
+     * @param target
+     * @param sources
+     * @param keyword
+     */
+    function eventRule(cssRules, selector, target, sources, keyword) {
+        var newHash = sources[0] || keyword;
+        console.log('binding message events: ' + newHash + ' to ' + target + ' for ' + keyword);
+        evtBindings[target] = {hash: newHash, event: keyword};
+        var targetElms = document.querySelectorAll(target);
+        [].slice.call(targetElms).forEach(
+            function (elm) {
+                console.log('adding eventlistener for ' + newHash);
+                elm.xcssHandler = makeEventListener(newHash);
+                elm.addEventListener(keyword, elm.xcssHandler);
+            }
+        );
+
+    }
+
+    /**
+     * logicRule is a marker function
+    */
+    function LogicKeyword(){
+
+    }
+
+
+
 
     function makeStateChangeListener(targetKey, msgKey, selector, cssRules) {
 
@@ -293,6 +342,7 @@
 
     function makeEventListener(msg) {
         return function xcssHandler(evt) {
+            var pattern;
             var hash = msg.replace(/\./g, '/');
             var parms = '';
             var keys = [];
@@ -312,9 +362,11 @@
             if (hash.indexOf('/') === 0) {
                 location.hash = location.hash.split('?')[0] + hash + parms;
             } else if (hash.indexOf('~') === 0) {
-                var pattern = (hash || '').replace(/~\s*/, '/');
-                var oldhash = (location.hash || '');
-                location.hash = oldhash.replace(pattern, '');
+                pattern = (hash || '').replace(/~\s*/, '/');
+                location.hash = (location.hash || '').replace(pattern, '');
+            } else if (hash.indexOf('>') === 0) {
+                 pattern = (hash || '').replace(/>\s*/, '/');
+                location.hash = location.hash.split('?')[0].split('/').slice(0,-1).join('/').replace(/[\/]+$/,'') + pattern;
             } else {
                 location.hash = hash + parms;
             }
