@@ -1,3 +1,4 @@
+/*global console,fetch*/
 (function xcss() {
 
     "use strict";
@@ -5,9 +6,22 @@
     var visitedRules = {};
     var evtBindings = {};
     var WHEN = 'when';
+    var AND = 'and';
     var EXTENDS = 'extends';
     var APPLIES = 'applies';
     var EVENTS = [];
+
+    var _KEYWORDS_ = {
+        EXTENDS: function () {
+        },
+        APPLIES: function () {
+        },
+        WHEN: function () {
+        },
+        AND: function () {
+        }
+    };
+
     //fetch all possible events
     for (var evtKey in HTMLElement.prototype) {
         if (evtKey.indexOf('on') === 0) {
@@ -16,7 +30,7 @@
         }
     }
     //make keyword split expression
-    var KEYWORDS = new RegExp('\\s+(EXTENDS|APPLIES|WHEN|' + EVENTS.join('|') + ')\\s+', 'i');
+    var KEYWORDS = new RegExp('\\s+(EXTENDS|APPLIES|WHEN|AND|' + EVENTS.join('|') + ')\\s+', 'i');
     var styleSheet = addNewStylesheet();
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
@@ -86,19 +100,31 @@
     function extendRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
+                var keyword, target, source, newCssText, sources,targetElms;
+                var parts = selector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
                     //console.log('skipping visited selector: ' + selector);
                     return;
                 }
                 visitedRules[selector] = cssRules[selector];
-                var parts = selector.split(KEYWORDS);
+
                 console.log('parts: [' + parts.join(' : '), '] selector:', selector);
+
                 if (parts.length > 2) {
-                    if (parts[1].toLowerCase() === EXTENDS) {
+                    //read first thre fields
+                    target = parts.shift().trim();
+                    keyword = parts.shift().trim();
+                    sources = parts.filter(
+                        function (part) {
+                            return (!_KEYWORDS_[part.toUpperCase()]);
+                        }
+                    );
+
+                    if (keyword === EXTENDS) {
                         console.log('processing EXTENDS selector: ' + selector);
-                        var dest = parts[0].trim();
-                        var from = parts[2].trim().split(/\s*,\s*/).map(
+
+                        newCssText = sources.map(
                             function (fromSelector) {
                                 //resolve fromSelector when not found in currenttly resolved rules
                                 if (!cssRules[fromSelector]) {
@@ -108,48 +134,55 @@
                                 return (cssRules[fromSelector]) ? cssRules[fromSelector].style.cssText : '';
                             }
                         ).join(' ');
+
                         var self = cssRules[selector];
-                        console.log('adding rule: ' + dest + '{' + self.style.cssText + from + '}');
-                        var idx = styleSheet.insertRule(dest + '{' + self.style.cssText + from + '}', styleSheet.cssRules.length);
-                        cssRules[dest] = styleSheet.cssRules[idx];
+                        console.log('adding rule: ' + target + '{' + self.style.cssText + newCssText + '}');
+                        var idx = styleSheet.insertRule(target + '{' + self.style.cssText + newCssText + '}', styleSheet.cssRules.length);
+                        cssRules[target] = styleSheet.cssRules[idx];
                     }
 
+                    else if (keyword === APPLIES) {
+                        console.log('processing APPLIES selector: ' + selector);
+                        //parts.forEach
+                        targetElms = document.querySelectorAll(target);
+                        [].slice.call(targetElms).forEach(
+                            function (elm) {
+                                console.log('applying' + sources);
+                                sources.forEach(
+                                    function (className) {
+                                        console.log('applying' + className);
+                                        elm.classList.add(className);
 
-                    if (parts[1].toLowerCase() === WHEN) {
-                        console.log('processing WHEN selector: ' + selector);
-                        var target = parts[0].trim();
-                        var msg = parts[2].trim().split(/\s*,\s*/).forEach(
-                            function (msgKey) {
-                                console.log('binding message listener: ' + msgKey);
-                                window.addEventListener('message', makeStateChangeListener(target, msgKey, selector, cssRules));
+                                    }
+                                );
+                            }
+                        );
+                    }
+
+                    else if (keyword === WHEN) {
+                        console.log('binding message WHEN listener: ' + sources + ' to ' + selector);
+
+                        sources.forEach(
+                            function (hashState) {
+                                console.log('binding message listener: ' + hashState);
+                                window.addEventListener('message', makeStateChangeListener(target, hashState, selector, cssRules));
                             }
                         );
                     }
 
 
-                    if (parts[1].toLowerCase() === APPLIES) {
-                        console.log('processing APPLIES selector: ' + selector);
-                        var target = parts[0].trim();
-                        var classNames = parts[2];
-                        var elms = document.querySelectorAll(target);
-                        for (var i = 0; i < elms.length; i++) {
-                             console.log('applying' + classNames);
-                             elms[i].classList.add( classNames);
-                        }
-                    }
-                    var event = parts[1].toLowerCase();
-                    if (EVENTS.indexOf(event) >= 0) {
-                        console.log('processing EVENT selector: ' + selector + 'for event: ' + event);
-                        var targets = parts[0].trim();
-                        var hash = parts[2].trim();
-                        evtBindings[targets] = {hash: hash, event: event};
-                        console.log('binding message events: ' + hash + ' to ' + targets);
-                        var elms = document.querySelectorAll(targets);
-                        for (var i = 0; i < elms.length; i++) {
-                            console.log('adding eventlistener for ' + hash);
-                            elms[i].xcssHandler = makeEventListener(hash);
-                            elms[i].addEventListener(event, elms[i].xcssHandler);
-                        }
+                    else if (EVENTS.indexOf(keyword) >= 0) {
+                        var newHash = sources[0] || keyword;
+                        console.log('binding message events: ' + source + ' to ' + target + ' for ' + keyword);
+                        evtBindings[target] = {hash: newHash, event: keyword};
+                        targetElms = document.querySelectorAll(target);
+                        [].slice.call(targetElms).forEach(
+                            function (elm) {
+                                console.log('adding eventlistener for ' + newHash);
+                                elm.xcssHandler = makeEventListener(newHash);
+                                elm.addEventListener(keyword, elm.xcssHandler);
+                            }
+                        );
 
                     }
                 }
@@ -160,7 +193,7 @@
 
     function makeStateChangeListener(targetKey, msgKey, selector, cssRules) {
 
-        console.log('makeStateChangeListener for: ' + targetKey + ', msgKey: ' +  msgKey);
+        console.log('makeStateChangeListener for: ' + targetKey + ', msgKey: ' + msgKey);
 
         var msgParts = msgKey.split(/[\[\]]/);
         var state = msgParts[0];

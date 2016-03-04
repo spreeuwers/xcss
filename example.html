@@ -16,7 +16,7 @@
             transform:rotate(30deg);
         }
 
-        .my-box EXTENDS .clr-red, .bg-blue, .gekanteld {
+        .my-box EXTENDS .clr-red AND .bg-blue AND .gekanteld {
             border: 2px solid black;
             padding:3px;
         }
@@ -30,7 +30,7 @@
         }
 
         .dlg APPLIES my-dialog {}
-        
+
         #btn1 CLICK .buttonclicked {}
         #btn2 CLICK ~buttonclicked {}
         #btn3 CLICK btn3clicked[data-value] {}
@@ -54,8 +54,8 @@
         }
 
         #angle WHEN rotate[value]{
-          content:'${value}'
-        }
+             content:'${value}'
+         }
 
         nav>ul li CLICK navigeer[link] {}
         nav>ul li{
