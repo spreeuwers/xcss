@@ -263,9 +263,19 @@
 
         ////////////////////////////////////////////////////////
 
-        function stateChangeListener(evt) {
+        function stateChangeListener(msgEvent) {
             var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
-            console.log('event received: ' + msgKey, 'evt:', evt.data);
+            console.log('event received: ' + msgKey, 'evt:', msgEvent.data);
+
+            if ( msgEvent.origin !== window.location.origin){
+                console.error('untrusted event received from other domain: ', msgEvent);
+                return;
+            }
+            if (msgEvent.source !== window){
+                console.error('untusted event received from other window: ', msgEvent);
+                return;
+            }
+
             //console.log('event received: ', evt.data );
             var elms = document.querySelectorAll(target);
             for (var i = 0; i < elms.length; i++) {
@@ -274,14 +284,14 @@
                     elms[i].cssText = elms[i].style.cssText || '';
                 }
                 var pattern = new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/') + '$');
-                var path = Object.keys(evt.data || {})[0] || '';
+                var path = Object.keys(msgEvent.data || {})[0] || '';
                 if (pattern.test(path)) {
                     elms[i].style.cssText = cssRules[selector].style.cssText;
                     //If a template css is specified as argument
                     if (parms) {
-                        cssText = Object.keys(evt.data[state]).reduce(
+                        cssText = Object.keys(msgEvent.data[state]).reduce(
                             function (prev, key) {
-                                return prev.replace('${' + key + '}', evt.data[state][key]);
+                                return prev.replace('${' + key + '}', msgEvent.data[state][key]);
                             }, parms
                         );
                         var newCssText = cssText.replace(/["']/g, '').replace(/=/g, ': ').replace(/&/g, ';\n');
@@ -291,7 +301,7 @@
                         if (matches && matches[1]) {
                             var content = matches[1];
                             var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
-                            var replacer = evt.data[state][parms];
+                            var replacer = msgEvent.data[state][parms];
                             var elm = elms[i];
                             content = content.replace(placeholder, replacer);
                             if (matches = content.match(/^"fetch\('([^)]*)'\)"$/)) {
@@ -300,14 +310,19 @@
 
                                         response.text().then(function (data) {
                                             console.log(data);
-                                            if (elm.tagName === "input" || elm.tagName === 'textarea') {
-                                                elm.value = data;
+                                            if ( /<script[>\s]/i.test(data) ){
+                                                console.error('unsave content ignored!');
                                             } else {
-                                                //if we has a change in the html rebind all events if needed
-                                                //so events bind seems to work as styles whenever an element
-                                                //matches the css rule the event is present
-                                                elm.innerHTML = data;
-                                                bindAllEvents();
+
+                                                if (elm.tagName === "input" || elm.tagName === 'textarea') {
+                                                    elm.value = data;
+                                                } else {
+                                                    //if we has a change in the html rebind all events if needed
+                                                    //so events bind seems to work as styles whenever an element
+                                                    //matches the css rule the event is present
+                                                    elm.innerHTML = data;
+                                                    bindAllEvents();
+                                                }
                                             }
 
 
@@ -339,7 +354,7 @@
 
 
     function makeEventListener(msg) {
-        return function xcssHandler(evt) {
+        return function xcssHandler(elmEvent) {
             var pattern;
             var hash = msg.replace(/\./g, '/');
             var parms = '';
@@ -349,7 +364,7 @@
             if (match && match[1] !== undefined) {
                 keys = match[1].split(',');
                 parms = '?' + keys.map(function (key) {
-                    var val = evt.srcElement[key] || evt.srcElement.getAttribute(key);
+                    var val = elmEvent.srcElement[key] || elmEvent.srcElement.getAttribute(key);
                     return key + '=' + val;
 
                 }).join('&');
