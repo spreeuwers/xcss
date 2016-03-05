@@ -5,6 +5,7 @@
     var allCSSRules = {};
     var visitedRules = {};
     var evtBindings = {};
+    var classBindings = {};
     var WHEN = 'when';
     var AND = 'and';
     var EXTENDS = 'extends';
@@ -30,6 +31,8 @@
     //make keyword split expression
     var keyWordsRegExp = Object.keys(KEYWORD_FUNCTIONS).concat(EVENTS).join('|');
     var KEYWORDS = new RegExp('\\s+(' + keyWordsRegExp + ')\\s+', 'i');
+    var EVENTEXPR = new RegExp('\\W+on('+ EVENTS.join('|') + ')\\W*=\\W*[\'\"]','i');
+    var SCRIPTEXPR = /<script[>\W]/i;
     var styleSheet = addNewStylesheet();
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
@@ -84,6 +87,27 @@
         );
     }
 
+    function bindAllClasses() {
+        Object.keys(classBindings).forEach(
+            function (target) {
+                var targetElms = document.querySelectorAll(target)||[];
+                var sources = classBindings[target]||[];
+                [].slice.call(targetElms).forEach(
+                    function (elm) {
+                        sources.forEach(
+                            function (className) {
+                                console.log('applying ' + className + ' to ' + target);
+                                elm.classList.add(className);
+
+                            }
+                        );
+                    }
+                );
+            }
+        );
+
+    }
+
     /**
      *
      */
@@ -102,7 +126,7 @@
     function compileRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
-                var keyword, target, source, newCssText, sources,targetElms,invalidKeyword,ucKeyword;
+                var keyword, target, source, newCssText, sources, targetElms, invalidKeyword, ucKeyword;
                 var parts = selector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
@@ -152,7 +176,7 @@
     }
 
     /**
-    */
+     */
     function extendRule(cssRules, selector, target, sources, keyword) {
 
         var newCssText = sources.map(
@@ -165,7 +189,7 @@
                 if (!cssRules[fromSelector]) {
                     console.error('Could not resolve rule fromSelector: ' + fromSelector);
                 } else {
-                    console.debug('Resolved rule fromSelector: ' + fromSelector + ' = ' +  cssRules[fromSelector].style.cssText );
+                    console.debug('Resolved rule fromSelector: ' + fromSelector + ' = ' + cssRules[fromSelector].style.cssText);
                 }
                 return (cssRules[fromSelector]) ? cssRules[fromSelector].style.cssText : '';
             }
@@ -180,7 +204,8 @@
 
     function applyRule(cssRules, selector, target, sources, keyword) {
 
-         var targetElms = document.querySelectorAll(target);
+        var targetElms = document.querySelectorAll(target);
+        classBindings[target] = sources;
         [].slice.call(targetElms).forEach(
             function (elm) {
                 sources.forEach(
@@ -238,12 +263,10 @@
 
     /**
      * logicRule is a marker function
-    */
-    function LogicKeyword(){
+     */
+    function LogicKeyword() {
 
     }
-
-
 
 
     function makeStateChangeListener(targetKey, msgKey, selector, cssRules) {
@@ -264,11 +287,11 @@
             var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
             console.log('event received: ' + msgKey, 'evt:', msgEvent.data);
 
-            if ( msgEvent.origin !== window.location.origin){
+            if (msgEvent.origin !== window.location.origin) {
                 console.error('untrusted event received from other domain: ', msgEvent);
                 return;
             }
-            if (msgEvent.source !== window){
+            if (msgEvent.source !== window) {
                 console.error('untusted event received from other window: ', msgEvent);
                 return;
             }
@@ -307,7 +330,7 @@
 
                                         response.text().then(function (data) {
                                             console.log(data);
-                                            if ( /<script[>\s]/i.test(data) ){
+                                            if (SCRIPTEXPR.test(data) || EVENTEXPR.test(data) ) {
                                                 console.error('unsave content ignored!');
                                             } else {
 
@@ -319,6 +342,7 @@
                                                     //matches the css rule the event is present
                                                     elm.innerHTML = data;
                                                     bindAllEvents();
+                                                    bindAllClasses();
                                                 }
                                             }
 
@@ -327,16 +351,22 @@
                                     }
                                 );
                             } else {
-                                var html = content.split(/[''"]/)[1]
-                                if (elm.tagName === "input" || elm.tagName === 'textarea') {
-                                    elm.value = html;
+                                var html = content.split(/[''"]/)[1];
+
+                                if (SCRIPTEXPR.test(html) || EVENTEXPR.test(html) ) {
+                                    console.error('unsave content ignored!');
                                 } else {
-                                    elm.innerHTML = html;
+                                    if (elm.tagName === "input" || elm.tagName === 'textarea') {
+                                        elm.value = html;
+                                    } else {
+                                        elm.innerHTML = html;
+                                    }
+                                    //if we has a change in the html rebind all events if needed
+                                    //so events bind seems to work as styles whenever an element
+                                    //matches the css rule the event is present
+                                    bindAllEvents();
+                                    bindAllClasses();
                                 }
-                                //if we has a change in the html rebind all events if needed
-                                //so events bind seems to work as styles whenever an element
-                                //matches the css rule the event is present
-                                bindAllEvents();
                             }
                         }
                     }
@@ -377,9 +407,9 @@
                 pattern = (hash || '').replace(/~\s*/, '/');
                 location.hash = (location.hash || '').replace(pattern, '');
             } else if (hash.indexOf('>') === 0) {
-                 //replace last state name in path
-                 pattern = (hash || '').replace(/>\s*/, '/');
-                location.hash = location.hash.split('?')[0].split('/').slice(0,-1).join('/').replace(/[\/]+$/,'') + pattern;
+                //replace last state name in path
+                pattern = (hash || '').replace(/>\s*/, '/');
+                location.hash = location.hash.split('?')[0].split('/').slice(0, -1).join('/').replace(/[\/]+$/, '') + pattern;
             } else {
                 location.hash = hash + parms;
             }
