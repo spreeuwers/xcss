@@ -154,9 +154,6 @@
     /**
     */
     function extendRule(cssRules, selector, target, sources, keyword) {
-        console.log('processing EXTENDS selector: ' + selector);
-        console.log('processing EXTENDS sources: ' + sources);
-
 
         var newCssText = sources.map(
             function (fromSelector) {
