@@ -6,6 +6,7 @@
     var visitedRules = {};
     var evtBindings = {};
     var classBindings = {};
+    var contentBindings = {};
     var WHEN = 'when';
     var AND = 'and';
     var EXTENDS = 'extends';
@@ -169,12 +170,27 @@
                         eventRule(cssRules, selector, target, sources, keyword);
 
                     }
+                } else if (cssRules[selector].style.content){
+                    insertContent(cssRules, selector, target, sources, keyword);
                 }
 
             }
         );
     }
 
+
+    function insertContent(cssRules, selector, target, sources, keyword){
+        if ( ! /:(before|after)/.test(selector) ) {
+            var targetElms = document.querySelectorAll(selector);
+            contentBindings[selector] = cssRules[selector].style.content;
+            console.log('inserting content for: ' + selector);
+            [].slice.call(targetElms).forEach(
+                function (elm) {
+                  elm.innerHTML = cssRules[selector].style.content.slice(1,-1);
+                }
+            );
+        }
+    }
     /**
      */
     function extendRule(cssRules, selector, target, sources, keyword) {
@@ -201,7 +217,14 @@
         cssRules[target] = styleSheet.cssRules[idx];
     }
 
-
+    /**
+     * adds found classes after keyword APPLIES to the elements for the selector
+     * @param cssRules
+     * @param selector
+     * @param target
+     * @param sources
+     * @param keyword
+     */
     function applyRule(cssRules, selector, target, sources, keyword) {
 
         var targetElms = document.querySelectorAll(target);

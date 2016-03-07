@@ -80,6 +80,20 @@
             background-color: green;
         }
 
+        date-component {
+            display:block;
+            width:150px;
+            padding:0px;
+            overflow:hidden;
+            content:"<input name='day'><input name='month'><input name='year'>";
+        }
+
+        date-component input{
+            max-width:32%;
+            width:30%;
+            margin: 0px;
+        }
+
 
 
     </style>
@@ -126,6 +140,8 @@
   </nav>
   <main>
      <article></article>
+      <br>
+     <date-component></date-component>
   </main>
 </body>
 </html>
