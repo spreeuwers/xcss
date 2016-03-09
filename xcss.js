@@ -25,7 +25,7 @@
     //fetch all possible events
     for (var evtKey in HTMLElement.prototype) {
         if (evtKey.indexOf('on') === 0) {
-            EVENTS.push(evtKey.substr(2));
+            EVENTS.push(evtKey.substr(2).toUpperCase() );
             //console.log(evtKey);
         }
     }
@@ -127,7 +127,7 @@
     function compileRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
-                var keyword, target, source, newCssText, sources, targetElms, invalidKeyword, ucKeyword;
+                var keyword, target, source, newCssText, sources, targetElms, invalidKeyword, ucKeyword,lcKeyword;
                 var parts = selector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
@@ -146,7 +146,7 @@
                     target = parts.shift().trim();
                     keyword = parts.shift().trim();
                     ucKeyword = keyword.toUpperCase();
-
+                    lcKeyword = keyword.toLowerCase();
                     sources = parts.filter(
                         function (part) {
                             var keywordType = KEYWORD_FUNCTIONS[part.toUpperCase()];
@@ -166,8 +166,8 @@
                         KEYWORD_FUNCTIONS[ucKeyword](cssRules, selector, target, sources, keyword);
                     }
 
-                    else if (EVENTS.indexOf(keyword) >= 0) {
-                        eventRule(cssRules, selector, target, sources, keyword);
+                    else if (EVENTS.indexOf(ucKeyword) >= 0) {
+                        eventRule(cssRules, selector, target, sources, lcKeyword);
 
                     }
                 } else if (cssRules[selector].style.content){
