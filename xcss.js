@@ -307,7 +307,8 @@
         ////////////////////////////////////////////////////////
 
         function stateChangeListener(msgEvent) {
-            var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
+            //var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
+            var matches;
             console.log('event received: ' + msgKey, 'evt:', msgEvent.data);
 
             if (msgEvent.origin !== window.location.origin) {
@@ -340,14 +341,13 @@
                         var newCssText = cssText.replace(/["']/g, '').replace(/=/g, ': ').replace(/&/g, ';\n');
                         elms[i].style.cssText = newCssText;
 
-                        var matches = cssRules[selector].style.cssText.match(contentExpr);
-                        if (matches && matches[1]) {
-                            var content = matches[1];
+                       var content = cssRules[selector].style.content;
+                       if (content) {
                             var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
                             var replacer = msgEvent.data[state][parms];
                             var elm = elms[i];
                             content = content.replace(placeholder, replacer);
-                            if (matches = content.match(/^"fetch\('([^)]*)'\)"$/)) {
+                            if (matches = content.match(/^"url\('([^)]*)'\)"$/)) {
                                 fetch(matches[1]).then(
                                     function (response) {
 
