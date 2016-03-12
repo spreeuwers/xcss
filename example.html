@@ -2,7 +2,9 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>xcss example </title>
+    <link href="register.css" rel="stylesheet" type="text/css">
     <style>
         .clr-red {
             color: #FFDDDD;
@@ -80,23 +82,29 @@
             background-color: green;
         }
 
-        date-component {
+        date-component COMPONENT template[date-component]{
             display:block;
             width:150px;
             padding:0px;
             overflow:hidden;
-            content:"<input name='day'><input name='month'><input name='year'>";
+/*          content:"<input name='day'><input name='month'><input name='year'>";*/
         }
 
-        date-component input{
-            max-width:32%;
-            width:30%;
-            margin: 0px;
-        }
+        
 
 
 
     </style>
+    <template   date-component>
+       <style>
+       input{
+            max-width:32%;
+            width:30%;
+            margin: 0px;
+        }
+       </style> 
+       <input name='day'><input name='month'><input name='year'>
+    </template>
     <link rel="stylesheet" type="text/css" href="register.css">
 
     <!--polyfill for fetch in edge-->

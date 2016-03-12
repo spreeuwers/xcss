@@ -17,6 +17,7 @@
     var KEYWORD_FUNCTIONS = {
         EXTENDS: extendRule,
         APPLIES: applyRule,
+        COMPONENT:componentRule,
         WHEN: stateRule,
         AND: LogicKeyword,
         OR: LogicKeyword
@@ -190,6 +191,26 @@
                 }
             );
         }
+    }
+
+    function componentRule(cssRules, selector, target, sources, keyword) {
+        //make multiple registrations possible
+       var registered = {}; 
+            
+               var proto = Object.create(HTMLElement.prototype);
+               var tpl = sources[0] || 'tepmlate#'+target;//default templateid = name of tag
+               proto.createdCallback = function() {
+                 // Adding a Shadow DOM
+                 var root = this.createShadowRoot();
+                 // Adding a template
+                 var template = document.querySelector(tpl);
+                 var clone = document.importNode(template.content, true);
+                  root.appendChild(clone);
+               }
+               document.registerElement(target, {
+                   prototype: proto
+               });
+        
     }
     /**
      */

@@ -1,0 +1,37 @@
+        button.navbar-toggle CLICK navbar{}
+
+        div#navbar {
+            display:none;
+        }
+
+        div#navbar WHEN navbar {
+            display:block;
+        }
+
+        .italic {
+            font-style: italic;
+        }
+        .bold {
+            font-weight: bold;
+        }
+
+        li:first-of-type APPLIES active AND italic{
+            font-style: italic;
+        }
+
+        li APPLIES bold{
+            font-style: bold;
+        }
+
+        #content WHEN menu[page]{
+            content:"url('${page}.html')";
+        }
+
+        .field{
+            min-width:10rem;
+        }
+
+        form label APPLIES italic {
+        }
+
+
