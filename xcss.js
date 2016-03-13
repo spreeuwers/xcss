@@ -36,6 +36,7 @@
     var EVENTEXPR = new RegExp('\\W+on('+ EVENTS.join('|') + ')\\W*=\\W*[\'\"]','i');
     var SCRIPTEXPR = /<script[>\W]/i;
     var styleSheet = addNewStylesheet();
+    var components={};
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
     window.addEventListener('hashchange', stateChanged);
@@ -195,22 +196,59 @@
 
     function componentRule(cssRules, selector, target, sources, keyword) {
         //make multiple registrations possible
-       var registered = {}; 
-            
-               var proto = Object.create(HTMLElement.prototype);
-               var tpl = sources[0] || 'tepmlate#'+target;//default templateid = name of tag
-               proto.createdCallback = function() {
-                 // Adding a Shadow DOM
-                 var root = this.createShadowRoot();
-                 // Adding a template
-                 var template = document.querySelector(tpl);
-                 var clone = document.importNode(template.content, true);
-                  root.appendChild(clone);
-               }
-               document.registerElement(target, {
-                   prototype: proto
-               });
-        
+        var registered = {};
+        var key;
+        var proto = Object.create(HTMLElement.prototype);
+
+        var comp = {};
+        var tplExpr = /\[template(Id|Url)="([\w-\/\.]*)"\]/i;
+        var template = sources[0].match(tplExpr);
+        //extract url of id
+        if(template){
+           comp.template ={};
+           template.shift();
+           key =template.shift().toLowerCase();
+           comp.template[key] = template.shift();
+        } else {
+            comp.content = cssRules[selector].style.content.replace(/^"/, '').replace(/"$/, '');
+        }
+
+
+        components[target.toUpperCase()]=comp;
+        //default templateid = name of tag
+        proto.createdCallback = function () {
+            // Adding a Shadow DOM
+            var root = this.createShadowRoot();
+            var comp = components[this.tagName];
+            // Adding a template
+            if(comp.template){
+                if (comp.template.id) {
+                    var tpl = document.querySelector('#' + comp.template.id);
+                    var clone = document.importNode(tpl.content, true);
+                    root.appendChild(clone);
+                } else if (comp.template.url){
+                    fetch(comp.template.url).then(
+                        function(response){
+                            return response.text();
+                        }
+                    ).then(
+                        function(html){
+                            root.innerHTML = html;
+                        }
+                    )
+
+                }
+
+            } else {
+                root.innerHTML = comp.content;
+            }
+        }
+        document.registerElement(target, {
+            prototype: proto
+        });
+        var self = cssRules[selector];
+        styleSheet.insertRule(target + '{' + self.style.cssText + '}', styleSheet.cssRules.length);
+
     }
     /**
      */

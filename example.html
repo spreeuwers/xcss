@@ -4,98 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>xcss example </title>
+    <link href="example.css" rel="stylesheet" type="text/css">
     <link href="register.css" rel="stylesheet" type="text/css">
     <style>
-        .clr-red {
-            color: #FFDDDD;
-        }
-
-        .bg-blue {
-            background-color:#1133aa;
-        }
-
-        .gekanteld {
-            transform:rotate(30deg);
-        }
-
-        .my-box EXTENDS .clr-red AND .bg-blue AND .gekanteld {
-            border: 2px solid black;
-            padding:3px;
-        }
-
-        .my-dialog EXTENDS .my-box {
-            font-size: 1em;
-            position:absolute;
-            top: 50%;
-            left:50%;
-
-        }
-
-        .dlg APPLIES my-dialog {}
-
-        #btn1 CLICK .buttonclicked {}
-        #btn2 CLICK ~buttonclicked {}
-        #btn3 CLICK btn3clicked[data-value] {}
-        #btn4 CLICK load[data-value] {}
-        #btn5 CLICK >alt_sub_state {}
-
-        #myrange CHANGE rotate[value] {}
-
-        #mytext WHEN buttonclicked *{
-             background-color:yellow;
-        }
-
-        #mycheck WHEN * buttonclicked *{
-            transform:rotate(45deg);
-
-        }
-        #dlg1 WHEN btn3clicked[data-value]{
-            content:"${data-value}";
-        }
-        #dlg1 WHEN rotate[transform="rotate(${value}deg)"] {
-            transform:rotate(270deg);
-        }
-
-        #angle WHEN rotate[value]{
-             content:'${value}'
-         }
-
-        nav>ul li CLICK navigeer[link] {}
-        nav>ul li{
-          display:inline;
-          border:1px solid black;
-          margin:3px;
-          padding:3px;
-        }
-
-        main>article WHEN navigeer[link]{
-          content:"url('${link}.html')";
-        }
-
-        main>article {
-          min-width:80vw;
-          min-height:30vh;
-          border:1px solid black;
-        }
-
-        main>article WHEN navigeer[link] WHEN V{
-            background-color: green;
-        }
-
-        date-component COMPONENT template[date-component]{
-            display:block;
-            width:150px;
-            padding:0px;
-            overflow:hidden;
-/*          content:"<input name='day'><input name='month'><input name='year'>";*/
-        }
-
-        
-
-
-
     </style>
-    <template   date-component>
+    <template id="date-component">
        <style>
        input{
             max-width:32%;
@@ -150,7 +63,10 @@
   <main>
      <article></article>
       <br>
-     <date-component></date-component>
+      <simple-component></simple-component>
+     date: <date-component date="25-01-2016"></date-component>
+      <br>
+     time:<time-component></time-component>
   </main>
 </body>
 </html>
