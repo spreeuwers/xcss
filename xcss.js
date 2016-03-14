@@ -7,6 +7,7 @@
     var evtBindings = {};
     var classBindings = {};
     var contentBindings = {};
+    var stateListeners = [];
     var WHEN = 'when';
     var AND = 'and';
     var EXTENDS = 'extends';
@@ -66,7 +67,12 @@
             }
         });
         console.log('state:', state);
-        postMessage(state, location.href);
+        //postMessage(state, location.href);
+        stateListeners.forEach(
+            function (listener){
+                listener(state);
+            }
+        );
     }
 
 
@@ -116,10 +122,10 @@
      */
     function processCSSRules() {
         //collect all style rules
-        console.time('inheritCSSRules');
+        console.time('processCSSRules');
         collectRules(document);
         compileRules(allCSSRules);
-        console.timeEnd('inheritCSSRules');
+        console.timeEnd('processCSSRules');
     }
 
     /**
@@ -315,7 +321,8 @@
         sources.forEach(
             function (hashState) {
                 console.log('binding message listener: ' + hashState);
-                window.addEventListener('message', makeStateChangeListener(target, hashState, selector, cssRules));
+                stateListeners.push(makeStateChangeListener(target, hashState, selector, cssRules));
+                ///window.addEventListener('message', makeStateChangeListener(target, hashState, selector, cssRules));
             }
         );
     }
@@ -356,7 +363,7 @@
         console.log('makeStateChangeListener for: ' + targetKey + ', msgKey: ' + msgKey);
 
         var msgParts = msgKey.split(/[\[\]]/);
-        var state = msgParts[0];
+        var stateKey = msgParts[0];
         var parms = msgParts[1];
         var cssText = '';
         var target = targetKey + '';
@@ -365,19 +372,12 @@
 
         ////////////////////////////////////////////////////////
 
-        function stateChangeListener(msgEvent) {
+        function stateChangeListener(newState) {
             //var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
             var matches;
-            console.log('event received: ' + msgKey, 'evt:', msgEvent.data);
+            console.log('event received: ' + msgKey, 'evt:', newState);
 
-            if (msgEvent.origin !== window.location.origin) {
-                console.error('untrusted event received from other domain: ', msgEvent);
-                return;
-            }
-            if (msgEvent.source !== window) {
-                console.error('untusted event received from other window: ', msgEvent);
-                return;
-            }
+            var state = newState[stateKey];
 
             //console.log('event received: ', evt.data );
             var elms = document.querySelectorAll(target);
@@ -387,14 +387,14 @@
                     elms[i].cssText = elms[i].style.cssText || '';
                 }
                 var pattern = new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/') + '$');
-                var path = Object.keys(msgEvent.data || {})[0] || '';
+                var path = Object.keys(newState || {})[0] || '';
                 if (pattern.test(path)) {
                     elms[i].style.cssText = cssRules[selector].style.cssText;
                     //If a template css is specified as argument
                     if (parms) {
-                        cssText = Object.keys(msgEvent.data[state]).reduce(
+                        cssText = Object.keys(state).reduce(
                             function (prev, key) {
-                                return prev.replace('${' + key + '}', msgEvent.data[state][key]);
+                                return prev.replace('${' + key + '}', state[key]);
                             }, parms
                         );
                         var newCssText = cssText.replace(/["']/g, '').replace(/=/g, ': ').replace(/&/g, ';\n');
@@ -403,7 +403,7 @@
                        var content = cssRules[selector].style.content;
                        if (content) {
                             var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
-                            var replacer = msgEvent.data[state][parms];
+                            var replacer = state[parms];
                             var elm = elms[i];
                             content = content.replace(placeholder, replacer);
                             if (matches = content.match(/^"url\('([^)]*)'\)"$/)) {
