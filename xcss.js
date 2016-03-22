@@ -73,6 +73,8 @@
                 listener(state);
             }
         );
+        bindAllEvents();
+        bindAllClasses();
     }
 
 
@@ -382,14 +384,16 @@
             //console.log('event received: ', evt.data );
             var elms = document.querySelectorAll(target);
             for (var i = 0; i < elms.length; i++) {
-                console.log('event handled by ', elms[i].id);
-                if (elms[i].cssText === undefined) {
-                    elms[i].cssText = elms[i].style.cssText || '';
+                var elm = elms[i];
+                console.log('event handled by ', elm.id);
+                if (elm.cssText === undefined) {
+                    elm.cssText = elm.style.cssText || '';
                 }
                 var pattern = new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/') + '$');
                 var path = Object.keys(newState || {})[0] || '';
+                var content = cssRules[selector].style.content;
                 if (pattern.test(path)) {
-                    elms[i].style.cssText = cssRules[selector].style.cssText;
+                    elm.style.cssText = cssRules[selector].style.cssText;
                     //If a template css is specified as argument
                     if (parms) {
                         cssText = Object.keys(state).reduce(
@@ -398,62 +402,76 @@
                             }, parms
                         );
                         var newCssText = cssText.replace(/["']/g, '').replace(/=/g, ': ').replace(/&/g, ';\n');
-                        elms[i].style.cssText = newCssText;
+                        elm.style.cssText = newCssText;
 
-                       var content = cssRules[selector].style.content;
-                       if (content) {
-                            var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
-                            var replacer = state[parms];
-                            var elm = elms[i];
-                            content = content.replace(placeholder, replacer);
-                            if (matches = content.match(/^"url\('([^)]*)'\)"$/)) {
-                                fetch(matches[1]).then(
-                                    function (response) {
+                    }
 
-                                        response.text().then(function (data) {
-                                            console.log(data);
-                                            if (SCRIPTEXPR.test(data) || EVENTEXPR.test(data) ) {
-                                                console.error('unsave content ignored!');
-                                            } else {
+                    if (content) {
+                        var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
+                        var replacer = (state || {})[parms] || '';
 
-                                                if (elm.tagName === "input" || elm.tagName === 'textarea') {
-                                                    elm.value = data;
-                                                } else {
-                                                    //if we has a change in the html rebind all events if needed
-                                                    //so events bind seems to work as styles whenever an element
-                                                    //matches the css rule the event is present
-                                                    elm.innerHTML = data;
-                                                    bindAllEvents();
-                                                    bindAllClasses();
+                        content = content.replace(placeholder, replacer);
+                        if (matches = content.match(/^url\(['"]([^)]*)['"]\)$/)) {
+
+                            fetch(matches[1]).then(
+                                function (response) {
+
+                                    response.text().then(function (data) {
+                                        console.log(data);
+                                        if (SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
+                                            console.error('unsafe content ignored!');
+                                        } else {
+
+                                            if (elm.tagName === "input" || elm.tagName === 'textarea') {
+                                                if (!Array.isArray(elm.orgValue)){
+                                                    elm.orgValue = [elm.value];
                                                 }
+                                                elm.value = data;
+                                            } else {
+                                                //if we has a change in the html rebind all events if needed
+                                                //so events bind seems to work as styles whenever an element
+                                                //matches the css rule the event is present
+                                                if (!Array.isArray(elm.orgValue)){
+                                                    elm.orgValue = [elm.innerHTML];
+                                                }
+                                                elm.innerHTML = data;
                                             }
+                                        }
 
 
-                                        });
-                                    }
-                                );
-                            } else {
-                                var html = content.split(/[''"]/)[1];
-
-                                if (SCRIPTEXPR.test(html) || EVENTEXPR.test(html) ) {
-                                    console.error('unsave content ignored!');
-                                } else {
-                                    if (elm.tagName === "input" || elm.tagName === 'textarea') {
-                                        elm.value = html;
-                                    } else {
-                                        elm.innerHTML = html;
-                                    }
-                                    //if we has a change in the html rebind all events if needed
-                                    //so events bind seems to work as styles whenever an element
-                                    //matches the css rule the event is present
-                                    bindAllEvents();
-                                    bindAllClasses();
+                                    });
                                 }
+                            );
+                        } else if (matches = content.match(/^"([^"]*)"$/)) {
+                            var html = matches[1];
+
+                            if (SCRIPTEXPR.test(html) || EVENTEXPR.test(html)) {
+                                console.error('unsafe content ignored!');
+                            } else {
+                                if (elm.tagName === "input" || elm.tagName === 'textarea') {
+                                    if (!Array.isArray(elm.orgValue)){
+                                        elm.orgValue = [elm.value];
+                                    }
+                                    elm.value = html;
+                                } else {
+                                    if (!Array.isArray(elm.orgValue)) {
+                                        elm.orgValue = [elm.innerHTML];
+                                    }
+                                    elm.innerHTML = html;
+                                }
+                                //if we has a change in the html rebind all events if needed
+                                //so events bind seems to work as styles whenever an element
+                                //matches the css rule the event is present
+
                             }
                         }
                     }
                 } else {
                     elms[i].style.cssText = elms[i].cssText;
+                    if (content && Array.isArray(elm.orgValue)){
+                        var p =(['input','textarea'].indexOf(elm.tagName) < 0 ) ? 'innerHTML' : 'value';
+                        elm[p] = elm.orgValue[0];
+                    }
                 }
             }
 
@@ -503,11 +521,14 @@
     function collectRules(container) {
         [].slice.call(container.styleSheets || []).forEach(
             function (styleSheet) {
-                [].slice.call(styleSheet.cssRules || []).forEach(
-                    function (cssRule) {
-                        allCSSRules[cssRule.selectorText] = cssRule;
-                    }
-                );
+                if ( (styleSheet.href||'').indexOf(window.location.origin) === 0 ) {
+
+                    [].slice.call(styleSheet.cssRules || []).forEach(
+                        function (cssRule) {
+                            allCSSRules[cssRule.selectorText] = cssRule;
+                        }
+                    );
+                }
                 collectRules(styleSheet);
             }
         );

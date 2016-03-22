@@ -61,7 +61,7 @@ nav>ul li{
 }
 
 main>article WHEN navigeer[link]{
-    content:"url('${link}.html')";
+    content:url(${link}.html);
 }
 
 main>article {
@@ -96,4 +96,8 @@ time-component COMPONENT newTime [templateUrl="time-component.html"] {
     padding:0px;
     overflow:hidden;
     /*          content:"<input name='day'><input name='month'><input name='year'>";*/
+}
+
+form[data-person] LISTEN PERSON[ID]{
+
 }
