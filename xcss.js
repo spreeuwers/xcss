@@ -73,8 +73,14 @@
                 listener(state);
             }
         );
-        bindAllEvents();
-        bindAllClasses();
+
+        window.setTimeout(
+            function(){
+                bindAllEvents();
+                bindAllClasses();
+            },100
+        );
+
     }
 
 
@@ -320,13 +326,9 @@
     function stateRule(cssRules, selector, target, sources, keyword) {
         console.log('binding message WHEN listener: ' + sources + ' to ' + selector);
 
-        sources.forEach(
-            function (hashState) {
-                console.log('binding message listener: ' + hashState);
-                stateListeners.push(makeStateChangeListener(target, hashState, selector, cssRules));
-                ///window.addEventListener('message', makeStateChangeListener(target, hashState, selector, cssRules));
-            }
-        );
+        console.log('binding message listener: ' + sources);
+        stateListeners.push(makeStateChangeListener(target, sources, selector, cssRules));
+
     }
 
     /**
@@ -360,13 +362,25 @@
     }
 
 
-    function makeStateChangeListener(targetKey, msgKey, selector, cssRules) {
+    function makeStateChangeListener(targetKey, sources, selector, cssRules) {
 
-        console.log('makeStateChangeListener for: ' + targetKey + ', msgKey: ' + msgKey);
+        console.log('makeStateChangeListener for: ' + targetKey + ', sources: ' + sources);
 
-        var msgParts = msgKey.split(/[\[\]]/);
-        var stateKey = msgParts[0];
-        var parms = msgParts[1];
+        var targetStates = sources.map(
+            function(source){
+                var parts = source.split(/[\[\]]/);
+                var path = parts.shift().trim();
+                var pattern = path.replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/');
+                return {
+                    path:path,
+                    pattern: new RegExp('^' + pattern + '$'),
+                    params:parts.filter(function (p) {return !!p.trim(); }) //filter out empty parms
+                };
+            }
+        );
+
+        //var stateKey = msgParts[0];
+        //var parms = msgParts[1];
         var cssText = '';
         var target = targetKey + '';
 
@@ -375,11 +389,12 @@
         ////////////////////////////////////////////////////////
 
         function stateChangeListener(newState) {
-            //var contentExpr = /content\s*:\s*('[^']*'|"[^"]*")/;
-            var matches;
-            console.log('event received: ' + msgKey, 'evt:', newState);
-
-            var state = newState[stateKey];
+            var contentExpr;
+            var matches,parms;
+            var cssProperties = {}
+            console.log('event received: ' + targetKey, 'evt:', newState);
+            var path = Object.keys(newState)[0]||'';
+            var state = newState[path];
 
             //console.log('event received: ', evt.data );
             var elms = document.querySelectorAll(target);
@@ -389,22 +404,57 @@
                 if (elm.cssText === undefined) {
                     elm.cssText = elm.style.cssText || '';
                 }
-                var pattern = new RegExp('^' + msgKey.split('[')[0].trim().replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/') + '$');
-                var path = Object.keys(newState || {})[0] || '';
-                var content = cssRules[selector].style.content;
-                if (pattern.test(path)) {
-                    elm.style.cssText = cssRules[selector].style.cssText;
-                    //If a template css is specified as argument
-                    if (parms) {
-                        cssText = Object.keys(state).reduce(
-                            function (prev, key) {
-                                return prev.replace('${' + key + '}', state[key]);
-                            }, parms
-                        );
-                        var newCssText = cssText.replace(/["']/g, '').replace(/=/g, ': ').replace(/&/g, ';\n');
-                        elm.style.cssText = newCssText;
 
-                    }
+                var content = cssRules[selector].style.content;
+                var match = targetStates.filter(function(s){return s.pattern.test(path);});
+
+                if (match = match[0]) {
+                    parms = match.params;
+                    //filter content property out before adding the cssText
+                    cssText = cssRules[selector].style.cssText.split('; ').filter(
+                        function(cssLine){
+                            return cssLine.trim().indexOf('content:') < 0;
+                        }
+                    ).join('\n');
+                    elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function(v) {
+                        return state[v.substring(2,v.length-1)];
+                    });
+
+                    ////copy all styles from the stylesheet rule
+                    //Object.keys(cssRules[selector].style).forEach(
+                    //    function (styleKey){
+                    //        if (styleKey === 'content'){
+                    //            return;
+                    //        }
+                    //        elm.style[styleKey] = cssRules[selector].style[styleKey];
+                    //    }
+                    //);
+                    //then overwrite the defined style poroperties  with a templated  value
+                    parms.forEach(
+                        function( parm){
+                            var parts = parm.split('=');
+                            if (parts.length !== 2) {
+                                return;
+                            }
+                            var cssKey = parts.shift();
+                            var jsKey = cssKey.replace(/(-\w)/, function(v) { return v.substring(1).toUpperCase(); });
+                            if (Object.keys(elm.style).indexOf(jsKey) < 0){
+                                console.warn('Trying to set a style key:' + cssKey + ' that does not exsist!');
+                                return;
+                            }
+
+                            var value = (parts.shift()||'').replace(/^['"]/,'').replace(/['"]$/,'');
+                            if (value){
+                                value = value.replace(/\$\{[^\}]*\}/g, function(v) {
+                                    return state[v.substring(2,v.length-1)];
+                                });
+                                elm.style[jsKey] = value;
+                            }
+                        }
+                    );
+
+
+
 
                     if (content) {
                         var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
@@ -473,6 +523,7 @@
                         elm[p] = elm.orgValue[0];
                     }
                 }
+
             }
 
         }

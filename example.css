@@ -44,7 +44,7 @@
 #dlg1 WHEN btn3clicked[data-value]{
     content:"${data-value}";
 }
-#dlg1 WHEN rotate[transform="rotate(${value}deg)"] {
+#dlg1 WHEN rotate[transform="rotate(${value}deg)"] [background-color="rgb(${value},0,${value})" ] {
     transform:rotate(270deg);
 }
 
@@ -62,6 +62,7 @@ nav>ul li{
 
 main>article WHEN navigeer[link]{
     content:url(${link}.html);
+    background-color: green;
 }
 
 main>article {
