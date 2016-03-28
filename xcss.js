@@ -391,7 +391,7 @@
         function stateChangeListener(newState) {
             var contentExpr;
             var matches,parms;
-            var cssProperties = {}
+            var cssProperties = {};
             console.log('event received: ' + targetKey, 'evt:', newState);
             var path = Object.keys(newState)[0]||'';
             var state = newState[path];
@@ -538,11 +538,12 @@
             var parms = '';
             var keys = [];
             var match = msg.match(/\[([\w-]+)\]$/);
+            var elm = elmEvent.srcElement || elmEvent.target;
             //copy the specified (attribute) value into the hash param
             if (match && match[1] !== undefined) {
                 keys = match[1].split(',');
                 parms = '?' + keys.map(function (key) {
-                    var val = elmEvent.srcElement[key] || elmEvent.srcElement.getAttribute(key);
+                    var val = elm[key] || elm.getAttribute(key);
                     return key + '=' + val;
 
                 }).join('&');
