@@ -438,7 +438,7 @@
                             }
                             var cssKey = parts.shift();
                             var jsKey = cssKey.replace(/(-\w)/, function(v) { return v.substring(1).toUpperCase(); });
-                            if (Object.keys(elm.style).indexOf(jsKey) < 0){
+                            if (elm.style[jsKey] === undefined){
                                 console.warn('Trying to set a style key:' + cssKey + ' that does not exsist!');
                                 return;
                             }
