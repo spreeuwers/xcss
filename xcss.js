@@ -610,7 +610,7 @@
             } else if (hash.indexOf('>') === 0) {
                 //replace last state name in path
                 var prevPath = prevHash.pop();
-                if (hash.indexOf('.') < 0){
+                if (hash.indexOf('.') < 0){  //this means toggle the path
                     prevHash.push(path);
                 } else {
                     if (prevPath !== path){
