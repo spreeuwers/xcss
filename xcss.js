@@ -566,10 +566,9 @@
 
     function makeEventListener(msg) {
         return function xcssHandler(elmEvent) {
-            var pattern;
+            var prevPath;
             var hash = msg.split('[')[0];
             var parms = '';
-            var firstParm;
             var prefix = '?'
             var keys = [];
             var match = msg.match(/\[([\w-]+)\]$/);
@@ -610,8 +609,15 @@
                 }
             } else if (hash.indexOf('>') === 0) {
                 //replace last state name in path
-                prevHash.pop();
-                prevHash.push(path);
+                var prevPath = prevHash.pop();
+                if (hash.indexOf('.') < 0){
+                    prevHash.push(path);
+                } else {
+                    if (prevPath !== path){
+                        prevHash.push(prevPath);
+                        prevHash.push(path);
+                    }
+                }
                 location.hash = prevHash.join('/') + parms;
             } else if (hash.indexOf('.') === 0) {
                 //allways add

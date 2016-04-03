@@ -33,6 +33,7 @@
 #btn7 CLICK .allway_add_state {}
 #btn8 CLICK #absolute_state {}
 #btn9 CLICK ~ * {}
+#btn10 CLICK > .alt_sub_state {/*toggle last state*/}
 
 #myrange CHANGE rotate[value] {}
 
