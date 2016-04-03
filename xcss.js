@@ -33,7 +33,7 @@
     }
     //make keyword split expression
     var keyWordsRegExp = Object.keys(KEYWORD_FUNCTIONS).concat(EVENTS).join('|');
-    var KEYWORDS = new RegExp('\\s+(' + keyWordsRegExp + ')\\s+', 'i');
+    var KEYWORDS = new RegExp('\\s+(' + keyWordsRegExp + '),?\\s+', 'i');
     var EVENTEXPR = new RegExp('\\W+on('+ EVENTS.join('|') + ')\\W*=\\W*[\'\"]','i');
     var SCRIPTEXPR = /<script[>\W]/i;
     var styleSheet = addNewStylesheet();
@@ -45,27 +45,60 @@
     return;
 
     function stateChanged() {
-        var state = {};
-        var parts = location.hash.split('?');
-        var path = parts[0].replace(/#\/?/, '');
-        var parms = (parts[1] || '').split('&');
-        var result = state[path] = {};
-        console.log('path:' + path);
+        //var state = {};
+        var state = location.hash.replace(/^#/,'').split('/').map(
+            function(state){
+                var parts = state.split('?');
+                var parms = (parts[1] || '').split('&');
+                var path = parts[0];
+                var result = {};
+                result[path]={};
+                parms.forEach(function (parm) {
+                    var keyVal = parm.split('=');
+                    var key = keyVal[0];
+                    var val = keyVal[1];
+                    result[path][key] = val;
 
-
-        parms.forEach(function (parm) {
-            var keyVal = parm.split('=');
-            var key = keyVal[0];
-            var val = keyVal[1];
-            if (key) {
-                if (/<script/i.test(val)) {
-                    //prevent injection
-                    console.error('script tag not allowed!');
-                } else {
-                    result[key] = val;
-                }
+                });
+                return result;
             }
-        });
+        );
+        // var parts = location.hash.split('?');
+        // var path = parts[0].replace(/#\/?/, '');
+        // var parms = (parts[1] || '').split('&');
+        // var result = state[path] = {};
+        // console.log('path:' + path);
+        //
+        //
+        // parms.forEach(function (parm) {
+        //     var keyVal = parm.split('=');
+        //     var key = keyVal[0];
+        //     var val = keyVal[1];
+        //     if (key) {
+        //         if (/<script/i.test(val)) {
+        //             //prevent injection
+        //             console.error('script tag not allowed!');
+        //         } else {
+        //             result[key] = val;
+        //         }
+        //     }
+        // });
+
+        //collect path
+        state.path = state.map(function(s){return Object.keys(s)[0];}).join('/');
+        //collect all parameters
+        state.params = {};
+        state.forEach(
+            function(s){
+                var parms = s[Object.keys(s)[0]];
+                Object.keys(parms).forEach(
+                    function(k){
+                        state.params[k] = parms[k];
+                    }
+                );
+            }
+        );
+
         console.log('state:', state);
         //postMessage(state, location.href);
         stateListeners.forEach(
@@ -393,8 +426,8 @@
             var matches,parms;
             var cssProperties = {};
             console.log('event received: ' + targetKey, 'evt:', newState);
-            var path = Object.keys(newState)[0]||'';
-            var state = newState[path];
+            var path = newState.path;
+            var state = newState.params;
 
             //console.log('event received: ', evt.data );
             var elms = document.querySelectorAll(target);
@@ -534,34 +567,56 @@
     function makeEventListener(msg) {
         return function xcssHandler(elmEvent) {
             var pattern;
-            var hash = msg.replace(/\./g, '/');
+            var hash = msg.split('[')[0];
             var parms = '';
+            var firstParm;
+            var prefix = '?'
             var keys = [];
             var match = msg.match(/\[([\w-]+)\]$/);
-            var elm = elmEvent.srcElement || elmEvent.target;
+            var elm = elmEvent.currentTarget||elmEvent.srcElement;
             //copy the specified (attribute) value into the hash param
             if (match && match[1] !== undefined) {
                 keys = match[1].split(',');
-                parms = '?' + keys.map(function (key) {
+                // if (firstParm = location.hash.split('?')[1]){
+                //     prefix += firstParm + '&';
+                // }
+                parms = prefix + keys.map(function (key) {
                     var val = elm[key] || elm.getAttribute(key);
                     return key + '=' + val;
 
                 }).join('&');
 
-                hash = msg.split('[')[0];
+
             }
 
-            if (hash.indexOf('/') === 0) {
+            var parts = location.hash.replace(/^#/,'').split('/').map(function(p){return p.split('?')[0]});
+            var path = hash.replace(/^[#>+~\.\/]/,'').trim();
+            var pathPos = parts.indexOf(path);
+            var prevHash = location.hash.replace(/^#/,'').split('/');
+
+            if (hash.indexOf('+') === 0) {
                 //add state name to path
-                location.hash = location.hash.split('?')[0] + hash + parms;
+                if (pathPos < 0){
+                    prevHash.push(path);
+                    location.hash = prevHash.join('/') + parms;
+                }
             } else if (hash.indexOf('~') === 0) {
                 //delete state name from path
-                pattern = (hash || '').replace(/~\s*/, '/');
-                location.hash = (location.hash || '').replace(pattern, '');
+                if (path === '*'){
+                    pathPos = prevHash.length-1;
+                }
+                if (pathPos >= 0){
+                    location.hash = prevHash.filter(function(x,i){return i !== pathPos; }).join('/');
+                }
             } else if (hash.indexOf('>') === 0) {
                 //replace last state name in path
-                pattern = (hash || '').replace(/>\s*/, '/');
-                location.hash = location.hash.split('?')[0].split('/').slice(0, -1).join('/').replace(/[\/]+$/, '') + pattern;
+                prevHash.pop();
+                prevHash.push(path);
+                location.hash = prevHash.join('/') + parms;
+            } else if (hash.indexOf('.') === 0) {
+                //allways add
+                prevHash.push(path);
+                location.hash = prevHash.join('/') + parms;
             } else {
                 location.hash = hash + parms;
             }

@@ -25,11 +25,14 @@
 
 .dlg APPLIES my-dialog {}
 
-#btn1 CLICK .buttonclicked {}
-#btn2 CLICK ~buttonclicked {}
-#btn3 CLICK btn3clicked[data-value] {}
-#btn4 CLICK load[data-value] {}
-#btn5 CLICK >alt_sub_state {}
+#btn1 CLICK + buttonclicked {}
+#btn2 CLICK ~ buttonclicked {}
+#btn3 CLICK   btn3clicked[data-value] {}
+#btn4 CLICK   load[data-value] {}
+#btn5 CLICK > alt_sub_state {}
+#btn7 CLICK .allway_add_state {}
+#btn8 CLICK #absolute_state {}
+#btn9 CLICK ~ * {}
 
 #myrange CHANGE rotate[value] {}
 
@@ -98,7 +101,7 @@ time-component COMPONENT newTime [templateUrl="time-component.html"] {
     overflow:hidden;
     /*          content:"<input name='day'><input name='month'><input name='year'>";*/
 }
-
-form[data-person] LISTEN PERSON[ID]{
+/* feature?*/
+form[data-person] BEAN script.company.Person[ID]{
 
 }

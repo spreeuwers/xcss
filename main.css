@@ -24,7 +24,7 @@
         }
 
         #content WHEN menu[page]{
-            content:"url('${page}.html')";
+            content:url(${page}.html);
         }
 
         .field{
