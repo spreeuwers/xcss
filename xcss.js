@@ -401,15 +401,22 @@
         ////////////////////////////////////////////////////////
 
         function stateChangeListener(newState) {
-            var contentExpr;
             var matches,parms;
-            var cssProperties = {};
+
             console.log('event received: ' + targetKey, 'evt:', newState);
             var path = newState.path;
             var state = newState.params;
 
-            //console.log('event received: ', evt.data );
-            var elms = document.querySelectorAll(target);
+            //replace parameter placeholders in target selector with state parameter values
+            var elmQuery = target;
+            Object.keys(state).forEach(
+                function(key){
+                    elmQuery = elmQuery.replace('${' + key + '}', state[key]);
+                }
+            );
+
+
+            var elms = document.querySelectorAll(elmQuery);
             for (var i = 0; i < elms.length; i++) {
                 var elm = elms[i];
                 console.log('event handled by ', elm.id);
@@ -580,10 +587,12 @@
 
             if (hash.indexOf('+') === 0) {
                 //add state name to path
-                if (pathPos < 0){
-                    prevHash.push(path);
-                    location.hash = prevHash.join('/') + parms;
+               if (pathPos >= 0){
+                    prevHash.pop();
                 }
+                prevHash.push(path);
+                location.hash = prevHash.join('/') + parms;
+
             } else if (hash.indexOf('~') === 0) {
                 //delete state name from path
                 if (path === '*'){
