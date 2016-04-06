@@ -546,6 +546,8 @@
                     if (content && Array.isArray(elm.orgValue)){
                         var p =(['input','textarea'].indexOf(elm.tagName) < 0 ) ? 'innerHTML' : 'value';
                         elm[p] = elm.orgValue[0];
+                        elm.dataHtml = elm.orgValue[0];
+
                     }
                 }
 
