@@ -9,6 +9,13 @@
     <link href="register.css" rel="stylesheet" type="text/css">
     <link href="about.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="xcss.js"></script>
+    <script>
+        window.addEventListener('hashchange',
+                function(){
+                   document.getElementById('hash').innerHTML=window.location.hash;
+                }
+        );
+    </script>
     <style>
     </style>
 </head>
@@ -43,7 +50,10 @@
     <main id="content">
 
     </main>
-    <footer></footer>
+    <footer>
+
+    </footer>
 </div>
+<div id="hash" style="position:absolute;bottom:0px;background-color: silver"></div>
 </body>
 </html>
