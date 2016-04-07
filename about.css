@@ -1,0 +1,20 @@
+div.toggler{
+    background-color: silver;
+}
+
+div.toggler CLICK + toggle[target="(elm.nextElementSibling.style.height !=='auto')?'${target}':'xxx'"] {}
+
+
+div.toggle{
+    overflow: hidden;
+    height:0px;
+}
+
+div.toggle WHEN * toggle{
+    height:0px;
+}
+
+div.toggle[data-subject="${target}"] WHEN * toggle{
+    height:auto;
+    /*transition: 1s;*/
+}

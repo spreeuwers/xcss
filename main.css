@@ -23,7 +23,7 @@
             font-style: bold;
         }
 
-        #content WHEN menu[page]{
+        #content WHEN menu * [page]{
             content:url(${page}.html);
         }
 
