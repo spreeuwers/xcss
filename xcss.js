@@ -558,26 +558,45 @@
     }
 
 
+
     function makeEventListener(msg) {
+
+
         return function xcssHandler(elmEvent) {
+            "use strict";
             var prevPath;
             var hash = msg.split('[')[0];
             var parms = '';
             var prefix = '?'
             var keys = [];
-            var match = msg.match(/\[([\w-]+)\]$/);
+            var key,val,attr;
+            var match = msg.match(/\[([^\]]+)]$/);
             var elm = elmEvent.currentTarget||elmEvent.srcElement;
+
+
             //copy the specified (attribute) value into the hash param
             if (match && match[1] !== undefined) {
-                keys = match[1].split(',');
-                // if (firstParm = location.hash.split('?')[1]){
-                //     prefix += firstParm + '&';
-                // }
-                parms = prefix + keys.map(function (key) {
-                    var val = elm[key] || elm.getAttribute(key);
-                    return key + '=' + val;
+                attr = match[1].split('="');
+                key = attr[0];
+                val = attr[1];
+                if (val){
+                   [].slice.call(elm.attributes,0).forEach(
+                       function(attr){
+                           val = val.replace('${' + attr.name + '}',attr.value );
 
-                }).join('&');
+                       }
+                   )
+                   val = eval( val.replace(/^"/,'').replace(/"$/,''));
+                } else {
+                    val = elm[key] || elm.getAttribute(key);
+                }
+
+                parms = prefix + key + '=' +  encodeURIComponent(val);
+                // parms = prefix + [key].map(function (key) {
+                //     var val = elm[key] || elm.getAttribute(key);
+                //     return key + '=' + val;
+                //
+                // }).join('&');
 
 
             }
