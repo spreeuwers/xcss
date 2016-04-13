@@ -7,6 +7,25 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="lghmobile.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="xcss.js"></script>
+    <script>
+        var domain={};
+        domain.Person = Person;
+
+        function Person(){
+
+        }
+        Person.prototype.walk = function(){};
+
+        function EntityFactory(){
+
+        }
+        EntityFactory.create = function(json) {
+            return new domain[json.type]();
+        };
+
+        var p1 = EntityFactory.create({type:'Person'});
+        console.log(p1);
+    </script>
     <style>
     </style>
 </head>

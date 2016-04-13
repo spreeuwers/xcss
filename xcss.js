@@ -46,7 +46,7 @@
 
     function stateChanged() {
         //var state = {};
-        var state = location.hash.replace(/^#/,'').split('/').map(
+        var state = location.hash.replace(/^#\/?/,'').split('/').map(
             function(state){
                 var parts = state.split('?');
                 var parms = (parts[1] || '').split('&');
@@ -90,11 +90,19 @@
             function(){
                 bindAllEvents();
                 bindAllClasses();
+                bindAllContent()
             },100
         );
 
     }
 
+    function bindAllContent() {
+        Object.keys(contentBindings).forEach(
+            function (selector) {
+                insertContent(contentBindings,selector);
+            }
+        );
+    }
 
     function bindAllEvents() {
         Object.keys(evtBindings).forEach(
@@ -208,15 +216,50 @@
 
 
     function insertContent(cssRules, selector, target, sources, keyword){
+        var url,matches;
+        var content = cssRules[selector].style.content||'';
+        var targetElms = document.querySelectorAll(selector);
+
         if ( ! /:(before|after)/.test(selector) ) {
-            var targetElms = document.querySelectorAll(selector);
-            contentBindings[selector] = cssRules[selector].style.content;
+            if ( !contentBindings[selector] ){
+                contentBindings[selector] = {style: {content: allCSSRules[selector].style.content}};
+
+            }
+
             console.log('inserting content for: ' + selector);
+
+            if (matches = content.match(/^"url\('?([^)]*)'?\)"$/)) {
+                url = matches[1];
+            }
+
+            if (matches = content.match(/^'url\("?([^)]*)"?\)'$/)) {
+                url = matches[1];
+            }
+
+            if (matches = content.match(/^url\(['"]?([^)^'^"]*)['"]?\)$/)) {
+                url = matches[1];
+                //correct for chrome if not between quotes the style is invalid
+                if (cssRules[selector].style){
+                    allCSSRules[selector].style.content='';
+                }
+
+            }
+
+
             [].slice.call(targetElms).forEach(
                 function (elm) {
-                  elm.innerHTML = cssRules[selector].style.content.slice(1,-1);
-                }
+                    if (elm.insertedContent !== cssRules[selector].style.content) {
+                        elm.insertedContent = cssRules[selector].style.content;
+                        if (url) {
+                            loadContent(url, elm);
+                        } else {
+                            elm.innerHTML = cssRules[selector].style.content.slice(1, -1);
+                        }
+                    }
+                 }
             );
+
+
         }
     }
 
@@ -374,6 +417,43 @@
     }
 
 
+    function loadContent(url, elm) {
+        fetch(url).then(
+            function (response) {
+
+                response.text().then(function (data) {
+                    console.log(data);
+                    if (SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
+                        console.error('unsafe content ignored!');
+                    } else {
+
+                        if (elm.tagName === "input" || elm.tagName === 'textarea') {
+                            if (!Array.isArray(elm.orgValue)) {
+                                elm.orgValue = [elm.value];
+                            }
+                            elm.value = data;
+                        } else {
+                            //if we has a change in the html rebind all events if needed
+                            //so events bind seems to work as styles whenever an element
+                            //matches the css rule the event is present
+                            if (!Array.isArray(elm.orgValue)) {
+                                elm.orgValue = [elm.innerHTML];
+                            }
+                            //only update if needed so we keep element events working
+                            //no need to bind events again
+                            if (data !== elm.dataHtml) {
+                                elm.innerHTML = data;
+                                elm.dataHtml = data;
+                            }
+                        }
+                    }
+
+
+                });
+            }
+        );
+    }
+
     function makeStateChangeListener(targetKey, sources, selector, cssRules) {
 
         console.log('makeStateChangeListener for: ' + targetKey + ', sources: ' + sources);
@@ -481,42 +561,7 @@
 
                         content = content.replace(placeholder, replacer);
                         if (matches = content.match(/^url\(['"]([^)]*)['"]\)$/)) {
-
-
-                            fetch(matches[1]).then(
-                                function (response) {
-
-                                    response.text().then(function (data) {
-                                        console.log(data);
-                                        if (SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
-                                            console.error('unsafe content ignored!');
-                                        } else {
-
-                                            if (elm.tagName === "input" || elm.tagName === 'textarea') {
-                                                if (!Array.isArray(elm.orgValue)){
-                                                    elm.orgValue = [elm.value];
-                                                }
-                                                elm.value = data;
-                                            } else {
-                                                //if we has a change in the html rebind all events if needed
-                                                //so events bind seems to work as styles whenever an element
-                                                //matches the css rule the event is present
-                                                if (!Array.isArray(elm.orgValue)){
-                                                    elm.orgValue = [elm.innerHTML];
-                                                }
-                                                //only update if needed so we keep element events working
-                                                //no need to bind events again
-                                                if (data !== elm.dataHtml){
-                                                    elm.innerHTML = data;
-                                                    elm.dataHtml = data;
-                                                }
-                                            }
-                                        }
-
-
-                                    });
-                                }
-                            );
+                            loadContent(matches[1], elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
                             var html = matches[1];
 
