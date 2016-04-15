@@ -7,6 +7,8 @@
     var evtBindings = {};
     var classBindings = {};
     var contentBindings = {};
+    var pullBindings = {};
+
     var stateListeners = [];
     var WHEN = 'when';
     var AND = 'and';
@@ -20,6 +22,7 @@
         APPLIES: applyRule,
         COMPONENT:componentRule,
         WHEN: stateRule,
+        PULL: alignRule,
         AND: LogicKeyword,
         OR: LogicKeyword
     };
@@ -41,6 +44,7 @@
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
     window.addEventListener('hashchange', stateChanged);
+    window.addEventListener('resize',pullBoundElements);
     stateChanged();
     return;
 
@@ -90,7 +94,8 @@
             function(){
                 bindAllEvents();
                 bindAllClasses();
-                bindAllContent()
+                bindAllContent();
+                pullBoundElements();
             },100
         );
 
@@ -163,7 +168,7 @@
     function compileRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
-                var keyword, target, source, newCssText, sources, targetElms, invalidKeyword, ucKeyword,lcKeyword;
+                var keyword, target, sources, invalidKeyword, ucKeyword,lcKeyword;
                 var parts = selector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
@@ -262,6 +267,42 @@
 
         }
     }
+
+    function pullElements(target, direction) {
+        var targetElms = document.querySelectorAll(target);
+        [].slice.call(targetElms).forEach(
+            function (elm) {
+                console.log('pulling ' + target + ' to ' + direction);
+                elm.style.boxSizing='border-box';
+                var lm = parseInt(elm.style.marginLeft||'0');
+                var pullLeft = elm.parentNode.offsetWidth + elm.parentNode.offsetLeft - (elm.offsetLeft + elm.offsetWidth);
+                console.log('l  '+ elm.offsetLeft);
+                console.log('w  '+ elm.offsetWidth);
+                console.log('pw  '+ elm.offsetParent.offsetWidth);
+                console.log('lm  '+ lm);
+                console.log('pl  '+ pullLeft);
+                elm.style.marginLeft = (lm + pullLeft) +'px';
+                elm.style.marginRight = '0px';
+                elm.style.marginTop = '-70px';
+
+            }
+        );
+    }
+
+    function alignRule(cssRules, selector, target, sources, keyword) {
+        pullBindings[target] = sources;
+        pullElements(target, sources[0]);
+        window.setTimeout(pullBoundElements,10);
+    }
+
+    function pullBoundElements(){
+        Object.keys(pullBindings).forEach(
+            function(target){
+                pullElements(target,pullBindings[target]);
+            }
+        )
+    }
+
 
     function componentRule(cssRules, selector, target, sources, keyword) {
         //make multiple registrations possible
