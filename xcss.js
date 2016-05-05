@@ -20,7 +20,7 @@
     var KEYWORD_FUNCTIONS = {
         EXTENDS: extendRule,
         APPLIES: applyRule,
-        COMPONENT:componentRule,
+        COMPONENT: componentRule,
         WHEN: stateRule,
         PULL: alignRule,
         AND: LogicKeyword,
@@ -30,38 +30,38 @@
     //fetch all possible events
     for (var evtKey in HTMLElement.prototype) {
         if (evtKey.indexOf('on') === 0) {
-            EVENTS.push(evtKey.substr(2).toUpperCase() );
+            EVENTS.push(evtKey.substr(2).toUpperCase());
             //console.log(evtKey);
         }
     }
     //make keyword split expression
     var keyWordsRegExp = Object.keys(KEYWORD_FUNCTIONS).concat(EVENTS).join('|');
     var KEYWORDS = new RegExp('\\s+(' + keyWordsRegExp + '),?\\s+', 'i');
-    var EVENTEXPR = new RegExp('\\W+on('+ EVENTS.join('|') + ')\\W*=\\W*[\'\"]','i');
+    var EVENTEXPR = new RegExp('\\W+on(' + EVENTS.join('|') + ')\\W*=\\W*[\'\"]', 'i');
     var SCRIPTEXPR = /<script[>\W]/i;
     var styleSheet = addNewStylesheet();
-    var components={};
+    var components = {};
 
     document.addEventListener('DOMContentLoaded', processCSSRules);
     window.addEventListener('hashchange', stateChanged);
-    window.addEventListener('resize',pullBoundElements);
+    window.addEventListener('resize', pullBoundElements);
     stateChanged();
-    
+
     return;
 
     ////////////////////////////////////////////////////////////////
     //
     ////////////////////////////////////////////////////////////////
-    
+
     function stateChanged() {
         //var state = {};
-        var state = location.hash.replace(/^#\/?/,'').split('/').map(
-            function(state){
+        var state = location.hash.replace(/^#\/?/, '').split('/').map(
+            function (state) {
                 var parts = state.split('?');
                 var parms = (parts[1] || '').split('&');
                 var path = parts[0];
                 var result = {};
-                result[path]={};
+                result[path] = {};
                 parms.forEach(function (parm) {
                     var keyVal = parm.split('=');
                     var key = keyVal[0];
@@ -73,14 +73,16 @@
             }
         );
         //collect path
-        state.path = state.map(function(s){return Object.keys(s)[0];}).join('/');
+        state.path = state.map(function (s) {
+            return Object.keys(s)[0];
+        }).join('/');
         //collect all parameters
         state.params = {};
         state.forEach(
-            function(s){
+            function (s) {
                 var parms = s[Object.keys(s)[0]];
                 Object.keys(parms).forEach(
-                    function(k){
+                    function (k) {
                         state.params[k] = parms[k];
                     }
                 );
@@ -90,18 +92,18 @@
         console.log('state:', state);
         //postMessage(state, location.href);
         stateListeners.forEach(
-            function (listener){
+            function (listener) {
                 listener(state);
             }
         );
 
         window.setTimeout(
-            function(){
+            function () {
                 bindAllEvents();
                 bindAllClasses();
                 bindAllContent();
                 pullBoundElements();
-            },100
+            }, 100
         );
 
     }
@@ -109,7 +111,7 @@
     function bindAllContent() {
         Object.keys(contentBindings).forEach(
             function (selector) {
-                insertContent(contentBindings,selector);
+                insertContent(contentBindings, selector);
             }
         );
     }
@@ -137,8 +139,8 @@
     function bindAllClasses() {
         Object.keys(classBindings).forEach(
             function (target) {
-                var targetElms = document.querySelectorAll(target)||[];
-                var sources = classBindings[target]||[];
+                var targetElms = document.querySelectorAll(target) || [];
+                var sources = classBindings[target] || [];
                 [].slice.call(targetElms).forEach(
                     function (elm) {
                         sources.forEach(
@@ -173,7 +175,7 @@
     function compileRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
-                var keyword='', target='', sources=[], invalidKeyword, ucKeyword,lcKeyword;
+                var keyword = '', target = '', sources = [], invalidKeyword, ucKeyword, lcKeyword;
                 var parts = selector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
@@ -216,7 +218,7 @@
                         eventRule(cssRules, selector, target, sources, lcKeyword);
 
                     }
-                } else if (cssRules[selector].style.content){
+                } else if (cssRules[selector].style.content) {
                     insertContent(cssRules, selector, target, sources, keyword);
                 }
 
@@ -225,13 +227,13 @@
     }
 
 
-    function insertContent(cssRules, selector, target, sources, keyword){
-        var url,matches;
-        var content = cssRules[selector].style.content||'';
+    function insertContent(cssRules, selector, target, sources, keyword) {
+        var url, matches;
+        var content = cssRules[selector].style.content || '';
         var targetElms = document.querySelectorAll(selector);
 
-        if ( ! /:(before|after)/.test(selector) ) {
-            if ( !contentBindings[selector] ){
+        if (!/:(before|after)/.test(selector)) {
+            if (!contentBindings[selector]) {
                 contentBindings[selector] = {style: {content: allCSSRules[selector].style.content}};
 
             }
@@ -249,8 +251,8 @@
             if (matches = content.match(/^url\(['"]?([^)^'^"]*)['"]?\)$/)) {
                 url = matches[1];
                 //correct for chrome if not between quotes the style is invalid
-                if (cssRules[selector].style){
-                    allCSSRules[selector].style.content='';
+                if (cssRules[selector].style) {
+                    allCSSRules[selector].style.content = '';
                 }
 
             }
@@ -266,7 +268,7 @@
                             elm.innerHTML = cssRules[selector].style.content.slice(1, -1);
                         }
                     }
-                 }
+                }
             );
 
 
@@ -278,15 +280,15 @@
         [].slice.call(targetElms).forEach(
             function (elm) {
                 console.log('pulling ' + target + ' to ' + direction);
-                elm.style.boxSizing='border-box';
-                var lm = parseInt(elm.style.marginLeft||'0');
+                elm.style.boxSizing = 'border-box';
+                var lm = parseInt(elm.style.marginLeft || '0');
                 var pullRight = elm.parentNode.offsetWidth + elm.parentNode.offsetLeft - (elm.offsetLeft + elm.offsetWidth);
-                console.log('l  '+ elm.offsetLeft);
-                console.log('w  '+ elm.offsetWidth);
-                console.log('pw  '+ elm.offsetParent.offsetWidth);
-                console.log('lm  '+ lm);
-                console.log('pl  '+ pullRight);
-                elm.style.marginLeft = (lm + pullRight) +'px';
+                console.log('l  ' + elm.offsetLeft);
+                console.log('w  ' + elm.offsetWidth);
+                console.log('pw  ' + elm.offsetParent.offsetWidth);
+                console.log('lm  ' + lm);
+                console.log('pl  ' + pullRight);
+                elm.style.marginLeft = (lm + pullRight) + 'px';
                 elm.style.marginRight = '0px';
                 elm.style.marginTop = '-70px';
 
@@ -301,13 +303,13 @@
 
     }
 
-    function pullBoundElements(){
+    function pullBoundElements() {
         Object.keys(pullBindings).forEach(
-            function(target){
+            function (target) {
                 window.setTimeout(
-                    function(){
-                        pullElements(target,pullBindings[target]);
-                    },100
+                    function () {
+                        pullElements(target, pullBindings[target]);
+                    }, 100
                 );
             }
         )
@@ -324,35 +326,35 @@
         var tplExpr = /\[template(Id|Url)="([\w-\/\.]*)"\]/i;
         var template = sources[0].match(tplExpr);
         //extract url of id
-        if(template){
-           comp.template ={};
-           template.shift();
-           key =template.shift().toLowerCase();
-           comp.template[key] = template.shift();
+        if (template) {
+            comp.template = {};
+            template.shift();
+            key = template.shift().toLowerCase();
+            comp.template[key] = template.shift();
         } else {
             comp.content = cssRules[selector].style.content.replace(/^"/, '').replace(/"$/, '');
         }
 
 
-        components[target.toUpperCase()]=comp;
+        components[target.toUpperCase()] = comp;
         //default templateid = name of tag
         proto.createdCallback = function () {
             // Adding a Shadow DOM
             var root = this.createShadowRoot();
             var comp = components[this.tagName];
             // Adding a template
-            if(comp.template){
+            if (comp.template) {
                 if (comp.template.id) {
                     var tpl = document.querySelector('#' + comp.template.id);
                     var clone = document.importNode(tpl.content, true);
                     root.appendChild(clone);
-                } else if (comp.template.url){
+                } else if (comp.template.url) {
                     fetch(comp.template.url).then(
-                        function(response){
+                        function (response) {
                             return response.text();
                         }
                     ).then(
-                        function(html){
+                        function (html) {
                             root.innerHTML = html;
                         }
                     )
@@ -370,6 +372,7 @@
         styleSheet.insertRule(target + '{' + self.style.cssText + '}', styleSheet.cssRules.length);
 
     }
+
     /**
      */
     function extendRule(cssRules, selector, target, sources, keyword) {
@@ -510,14 +513,16 @@
         console.log('makeStateChangeListener for: ' + targetKey + ', sources: ' + sources);
 
         var targetStates = sources.map(
-            function(source){
+            function (source) {
                 var parts = source.split(/[\[\]]/);
                 var path = parts.shift().trim();
                 var pattern = path.replace(/\s*\*\s*/g, '.*').replace(/>/g, '\/');
                 return {
-                    path:path,
+                    path: path,
                     pattern: new RegExp('^' + pattern + '$'),
-                    params:parts.filter(function (p) {return !!p.trim(); }) //filter out empty parms
+                    params: parts.filter(function (p) {
+                        return !!p.trim();
+                    }) //filter out empty parms
                 };
             }
         );
@@ -532,7 +537,7 @@
         ////////////////////////////////////////////////////////
 
         function stateChangeListener(newState) {
-            var matches,parms;
+            var matches, parms;
 
             console.log('event received: ' + targetKey, 'evt:', newState);
             var path = newState.path;
@@ -541,7 +546,7 @@
             //replace parameter placeholders in target selector with state parameter values
             var elmQuery = target;
             Object.keys(state).forEach(
-                function(key){
+                function (key) {
                     elmQuery = elmQuery.replace('${' + key + '}', state[key]);
                 }
             );
@@ -556,18 +561,20 @@
                 }
 
                 var content = cssRules[selector].style.content;
-                var match = targetStates.filter(function(s){return s.pattern.test(path);});
+                var match = targetStates.filter(function (s) {
+                    return s.pattern.test(path);
+                });
 
                 if (match = match[0]) {
                     parms = match.params;
                     //filter content property out before adding the cssText
                     cssText = cssRules[selector].style.cssText.split('; ').filter(
-                        function(cssLine){
+                        function (cssLine) {
                             return cssLine.trim().indexOf('content:') < 0;
                         }
                     ).join('\n');
-                    elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function(v) {
-                        return state[v.substring(2,v.length-1)];
+                    elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
+                        return state[v.substring(2, v.length - 1)];
                     });
 
                     ////copy all styles from the stylesheet rule
@@ -581,29 +588,29 @@
                     //);
                     //then overwrite the defined style poroperties  with a templated  value
                     parms.forEach(
-                        function( parm){
+                        function (parm) {
                             var parts = parm.split('=');
                             if (parts.length !== 2) {
                                 return;
                             }
                             var cssKey = parts.shift();
-                            var jsKey = cssKey.replace(/(-\w)/, function(v) { return v.substring(1).toUpperCase(); });
-                            if (elm.style[jsKey] === undefined){
+                            var jsKey = cssKey.replace(/(-\w)/, function (v) {
+                                return v.substring(1).toUpperCase();
+                            });
+                            if (elm.style[jsKey] === undefined) {
                                 console.warn('Trying to set a style key:' + cssKey + ' that does not exsist!');
                                 return;
                             }
 
-                            var value = (parts.shift()||'').replace(/^['"]/,'').replace(/['"]$/,'');
-                            if (value){
-                                value = value.replace(/\$\{[^\}]*\}/g, function(v) {
-                                    return state[v.substring(2,v.length-1)];
+                            var value = (parts.shift() || '').replace(/^['"]/, '').replace(/['"]$/, '');
+                            if (value) {
+                                value = value.replace(/\$\{[^\}]*\}/g, function (v) {
+                                    return state[v.substring(2, v.length - 1)];
                                 });
                                 elm.style[jsKey] = value;
                             }
                         }
                     );
-
-
 
 
                     if (content) {
@@ -620,7 +627,7 @@
                                 console.error('unsafe content ignored!');
                             } else {
                                 if (elm.tagName === "input" || elm.tagName === 'textarea') {
-                                    if (!Array.isArray(elm.orgValue)){
+                                    if (!Array.isArray(elm.orgValue)) {
                                         elm.orgValue = [elm.value];
                                     }
                                     elm.value = html;
@@ -639,8 +646,8 @@
                     }
                 } else {
                     elms[i].style.cssText = elms[i].cssText;
-                    if (content && Array.isArray(elm.orgValue)){
-                        var p =(['input','textarea'].indexOf(elm.tagName) < 0 ) ? 'innerHTML' : 'value';
+                    if (content && Array.isArray(elm.orgValue)) {
+                        var p = (['input', 'textarea'].indexOf(elm.tagName) < 0 ) ? 'innerHTML' : 'value';
                         elm[p] = elm.orgValue[0];
                         elm.dataHtml = elm.orgValue[0];
 
@@ -654,7 +661,6 @@
     }
 
 
-
     function makeEventListener(msg) {
 
 
@@ -663,11 +669,10 @@
             var prevPath;
             var hash = msg.split('[')[0];
             var parms = '';
-            var prefix = '?'
-            var keys = [];
-            var key,val,attr;
+            var prefix = '?';
+            var key, val, attr;
             var match = msg.match(/\[([^\]]+)]$/);
-            var elm = elmEvent.currentTarget||elmEvent.srcElement;
+            var elm = elmEvent.currentTarget || elmEvent.srcElement;
 
 
             //copy the specified (attribute) value into the hash param
@@ -675,36 +680,32 @@
                 attr = match[1].split('="');
                 key = attr[0];
                 val = attr[1];
-                if (val){
-                   [].slice.call(elm.attributes,0).forEach(
-                       function(attr){
-                           val = val.replace('${' + attr.name + '}',attr.value );
+                if (val) {
+                    [].slice.call(elm.attributes, 0).forEach(
+                        function (attr) {
+                            val = val.replace('${' + attr.name + '}', attr.value);
 
-                       }
-                   )
-                   val = eval( val.replace(/^"/,'').replace(/"$/,''));
+                        }
+                    );
+                    val = eval(val.replace(/^"/, '').replace(/"$/, ''));
                 } else {
                     val = elm[key] || elm.getAttribute(key);
                 }
 
-                parms = prefix + key + '=' +  encodeURIComponent(val);
-                // parms = prefix + [key].map(function (key) {
-                //     var val = elm[key] || elm.getAttribute(key);
-                //     return key + '=' + val;
-                //
-                // }).join('&');
-
+                parms = prefix + key + '=' + encodeURIComponent(val);
 
             }
 
-            var parts = location.hash.replace(/^#/,'').split('/').map(function(p){return p.split('?')[0]});
-            var path = hash.replace(/^[#>+~\.\/]/,'').trim();
+            var parts = location.hash.replace(/^#/, '').split('/').map(function (p) {
+                return p.split('?')[0]
+            });
+            var path = hash.replace(/^[#>+~\.\/]/, '').trim();
             var pathPos = parts.indexOf(path);
-            var prevHash = location.hash.replace(/^#/,'').split('/');
+            var prevHash = location.hash.replace(/^#/, '').split('/');
 
             if (hash.indexOf('+') === 0) {
                 //add state name to path
-               if (pathPos >= 0){
+                if (pathPos >= 0) {
                     prevHash.pop();
                 }
                 prevHash.push(path);
@@ -712,19 +713,21 @@
 
             } else if (hash.indexOf('~') === 0) {
                 //delete state name from path
-                if (path === '*'){
-                    pathPos = prevHash.length-1;
+                if (path === '*') {
+                    pathPos = prevHash.length - 1;
                 }
-                if (pathPos >= 0){
-                    location.hash = prevHash.filter(function(x,i){return i !== pathPos; }).join('/');
+                if (pathPos >= 0) {
+                    location.hash = prevHash.filter(function (x, i) {
+                        return i !== pathPos;
+                    }).join('/');
                 }
             } else if (hash.indexOf('>') === 0) {
                 //replace last state name in path
-                var prevPath = prevHash.pop();
-                if (hash.indexOf('.') < 0){  //this means toggle the path
+                prevPath = prevHash.pop();
+                if (hash.indexOf('.') < 0) {  //this means toggle the path
                     prevHash.push(path);
                 } else {
-                    if (prevPath !== path){
+                    if (prevPath !== path) {
                         prevHash.push(prevPath);
                         prevHash.push(path);
                     }
@@ -745,7 +748,7 @@
     function collectRules(container) {
         [].slice.call(container.styleSheets || []).forEach(
             function (styleSheet) {
-                if ( (styleSheet.href||'').indexOf(window.location.origin) === 0 ) {
+                if ((styleSheet.href || '').indexOf(window.location.origin) === 0) {
 
                     [].slice.call(styleSheet.cssRules || []).forEach(
                         function (cssRule) {
