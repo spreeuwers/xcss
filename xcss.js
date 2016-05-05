@@ -46,8 +46,13 @@
     window.addEventListener('hashchange', stateChanged);
     window.addEventListener('resize',pullBoundElements);
     stateChanged();
+    
     return;
 
+    ////////////////////////////////////////////////////////////////
+    //
+    ////////////////////////////////////////////////////////////////
+    
     function stateChanged() {
         //var state = {};
         var state = location.hash.replace(/^#\/?/,'').split('/').map(
@@ -168,7 +173,7 @@
     function compileRules(cssRules) {
         Object.keys(cssRules).forEach(
             function (selector) {
-                var keyword, target, sources, invalidKeyword, ucKeyword,lcKeyword;
+                var keyword='', target='', sources=[], invalidKeyword, ucKeyword,lcKeyword;
                 var parts = selector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
@@ -275,13 +280,13 @@
                 console.log('pulling ' + target + ' to ' + direction);
                 elm.style.boxSizing='border-box';
                 var lm = parseInt(elm.style.marginLeft||'0');
-                var pullLeft = elm.parentNode.offsetWidth + elm.parentNode.offsetLeft - (elm.offsetLeft + elm.offsetWidth);
+                var pullRight = elm.parentNode.offsetWidth + elm.parentNode.offsetLeft - (elm.offsetLeft + elm.offsetWidth);
                 console.log('l  '+ elm.offsetLeft);
                 console.log('w  '+ elm.offsetWidth);
                 console.log('pw  '+ elm.offsetParent.offsetWidth);
                 console.log('lm  '+ lm);
-                console.log('pl  '+ pullLeft);
-                elm.style.marginLeft = (lm + pullLeft) +'px';
+                console.log('pl  '+ pullRight);
+                elm.style.marginLeft = (lm + pullRight) +'px';
                 elm.style.marginRight = '0px';
                 elm.style.marginTop = '-70px';
 
@@ -292,13 +297,18 @@
     function alignRule(cssRules, selector, target, sources, keyword) {
         pullBindings[target] = sources;
         pullElements(target, sources[0]);
-        window.setTimeout(pullBoundElements,10);
+        pullBoundElements();
+
     }
 
     function pullBoundElements(){
         Object.keys(pullBindings).forEach(
             function(target){
-                pullElements(target,pullBindings[target]);
+                window.setTimeout(
+                    function(){
+                        pullElements(target,pullBindings[target]);
+                    },100
+                );
             }
         )
     }
