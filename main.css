@@ -1,4 +1,4 @@
-        button.navbar-toggle CLICK navbar{}
+        button.navbar-toggle ONCLICK navbar{}
 
         div#navbar {
             display:none;

@@ -25,17 +25,17 @@
 
 .dlg APPLIES my-dialog {}
 
-#btn1 CLICK + buttonclicked {}
-#btn2 CLICK ~ buttonclicked {}
-#btn3 CLICK   btn3clicked[data-value] {}
-#btn4 CLICK   load[data-value] {}
-#btn5 CLICK > alt_sub_state {}
-#btn7 CLICK .allway_add_state {}
-#btn8 CLICK #absolute_state {}
-#btn9 CLICK ~ * {}
-#btn10 CLICK > .alt_sub_state {/*toggle last state*/}
+#btn1 ONCLICK + buttonclicked {}
+#btn2 ONCLICK ~ buttonclicked {}
+#btn3 ONCLICK   btn3clicked[data-value] {}
+#btn4 ONCLICK   load[data-value] {}
+#btn5 ONCLICK > alt_sub_state {}
+#btn7 ONCLICK .allway_add_state {}
+#btn8 ONCLICK #absolute_state {}
+#btn9 ONCLICK ~ * {}
+#btn10 ONCLICK > .alt_sub_state {/*toggle last state*/}
 
-#myrange CHANGE rotate[value] {}
+#myrange ONCHANGE rotate[value] {}
 
 #mytext WHEN buttonclicked *{
     background-color:yellow;
@@ -56,7 +56,7 @@
     content:'${value}'
 }
 
-nav>ul li CLICK navigeer[link] {}
+nav>ul li ONCLICK navigeer[link] {}
 nav>ul li{
     display:inline;
     border:1px solid black;

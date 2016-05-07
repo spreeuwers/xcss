@@ -1,5 +1,5 @@
-button[action="registreer"] CLICK register[action] {}
-button[action="loadComments"] CLICK load[action] {}
+button[action="registreer"] ONCLICK register[action] {}
+button[action="loadComments"] ONCLICK load[action] {}
 
 form[name="register"] textarea WHEN load[action]{
     content:"url('comments.txt')";

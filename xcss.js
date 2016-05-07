@@ -30,14 +30,14 @@
     //fetch all possible events
     for (var evtKey in HTMLElement.prototype) {
         if (evtKey.indexOf('on') === 0) {
-            EVENTS.push(evtKey.substr(2).toUpperCase());
+            EVENTS.push(evtKey.toUpperCase());
             //console.log(evtKey);
         }
     }
     //make keyword split expression
     var keyWordsRegExp = Object.keys(KEYWORD_FUNCTIONS).concat(EVENTS).join('|');
     var KEYWORDS = new RegExp('\\s+(' + keyWordsRegExp + '),?\\s+', 'i');
-    var EVENTEXPR = new RegExp('\\W+on(' + EVENTS.join('|') + ')\\W*=\\W*[\'\"]', 'i');
+    var EVENTEXPR = new RegExp('\\W+(' + EVENTS.join('|') + ')\\W*=\\W*[\'\"]', 'i');
     var SCRIPTEXPR = /<script[>\W]/i;
     var styleSheet = addNewStylesheet();
     var components = {};
@@ -126,7 +126,11 @@
                     var handler = evtBindings[target];
                     if (!elms[i].xcssHandler) {
                         console.log('binding message events: ' + handler.hash + ' to ' + target);
-                        elms[i].xcssHandler = makeEventListener(handler.hash);
+                        if (handler.hash === 'prevent'){
+                            elms[i].xcssHandler = function(evt){evt.preventDefault();evt.stopPropagation();}
+                        } else {
+                            elms[i].xcssHandler = makeEventListener(handler.hash);
+                        }
                         elms[i].addEventListener(handler.event, elms[i].xcssHandler);
                     }
 
@@ -451,13 +455,17 @@
     function eventRule(cssRules, selector, target, sources, keyword) {
         var newHash = sources[0] || keyword;
         console.log('binding message events: ' + newHash + ' to ' + target + ' for ' + keyword);
-        evtBindings[target] = {hash: newHash, event: keyword};
+        evtBindings[target] = {hash: newHash, event: keyword.substring(2)};
         var targetElms = document.querySelectorAll(target);
         [].slice.call(targetElms).forEach(
             function (elm) {
                 console.log('adding eventlistener for ' + newHash);
-                elm.xcssHandler = makeEventListener(newHash);
-                elm.addEventListener(keyword, elm.xcssHandler);
+                if (newHash === 'prevent'){
+                   elm.xcssHandler = function(evt){evt.preventDefault();evt.stopPropagation();}
+                } else {
+                   elm.xcssHandler = makeEventListener(newHash);
+                }
+                elm.addEventListener(keyword.substring(2), elm.xcssHandler);
             }
         );
 
