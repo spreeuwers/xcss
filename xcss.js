@@ -546,7 +546,10 @@
 
         function stateChangeListener(newState) {
             var matches, parms;
-
+            var jsKey,cssKey;
+            var value;
+            var placeholder;
+            var replacer;
             console.log('event received: ' + targetKey, 'evt:', newState);
             var path = newState.path;
             var state = newState.params;
@@ -576,6 +579,7 @@
                 if (match = match[0]) {
                     parms = match.params;
                     //filter content property out before adding the cssText
+                    //because an inline style does not behave well having a content property
                     cssText = cssRules[selector].style.cssText.split('; ').filter(
                         function (cssLine) {
                             return cssLine.trim().indexOf('content:') < 0;
@@ -585,47 +589,59 @@
                         return state[v.substring(2, v.length - 1)];
                     });
 
-                    ////copy all styles from the stylesheet rule
-                    //Object.keys(cssRules[selector].style).forEach(
-                    //    function (styleKey){
-                    //        if (styleKey === 'content'){
-                    //            return;
-                    //        }
-                    //        elm.style[styleKey] = cssRules[selector].style[styleKey];
-                    //    }
-                    //);
-                    //then overwrite the defined style poroperties  with a templated  value
+
+                    //then overwrite the defined style properties  with a templated  value
                     parms.forEach(
                         function (parm) {
                             var parts = parm.split('=');
-                            if (parts.length !== 2) {
-                                return;
-                            }
-                            var cssKey = parts.shift();
-                            var jsKey = cssKey.replace(/(-\w)/, function (v) {
-                                return v.substring(1).toUpperCase();
-                            });
-                            if (elm.style[jsKey] === undefined) {
-                                console.warn('Trying to set a style key:' + cssKey + ' that does not exsist!');
+
+                            if (parts.length === 1  && content) {
+                                placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
+                                replacer = (state || {})[parms] || '';
+                                content = content.replace(placeholder, replacer);
                                 return;
                             }
 
-                            var value = (parts.shift() || '').replace(/^['"]/, '').replace(/['"]$/, '');
+                            if (parts.length !== 2) {
+                                return;
+                            }
+                            cssKey = parts.shift();
+                            jsKey = cssKey.replace(/(-\w)/, function (v) {
+                                return v.substring(1).toUpperCase();
+                            });
+
+
+                            value = (parts.shift() || '').replace(/^['"]/, '').replace(/['"]$/, '');
                             if (value) {
                                 value = value.replace(/\$\{[^\}]*\}/g, function (v) {
                                     return state[v.substring(2, v.length - 1)];
                                 });
-                                elm.style[jsKey] = value;
+                                
+                                //if there is no property key like jsKey warn if there is no content property
+                                if (elm.style[jsKey] === undefined) {
+                                    //if a content property is in the rule then replace the keys in the content
+                                    //with the evaluated value
+                                    if (content){
+                                        placeholder = new RegExp('\\$\\{' + jsKey + '\\}', 'g');
+                                        try {
+                                            replacer = eval(value) || '';
+                                        } catch(e) {
+                                          replacer = 'ERROR';
+                                          console.error('ERROR evaluating expression ' + value + ', error: ' + e);
+                                        }
+                                        content = content.replace(placeholder, replacer);
+                                    } else {
+                                        console.warn('Trying to set a style key:' + cssKey + ' that does not exist!');
+                                    }
+                                } else {
+                                    elm.style[jsKey] = eval(value);;
+                                }
                             }
                         }
                     );
 
 
                     if (content) {
-                        var placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
-                        var replacer = (state || {})[parms] || '';
-
-                        content = content.replace(placeholder, replacer);
                         if (matches = content.match(/^url\(['"]([^)]*)['"]\)$/)) {
                             loadContent(matches[1], elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
