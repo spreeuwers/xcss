@@ -594,25 +594,24 @@
                     parms.forEach(
                         function (parm) {
                             var parts = parm.split('=');
-
+                            //simple case : /path[propertyname] just replace content with value  
                             if (parts.length === 1  && content) {
-                                placeholder = new RegExp('\\$\\{' + parms + '\\}', 'g');
+                                placeholder = new RegExp('\\$\\{' + parm + '\\}', 'g');
                                 replacer = (state || {})[parms] || '';
                                 content = content.replace(placeholder, replacer);
                                 return;
                             }
 
-                            if (parts.length !== 2) {
-                                return;
-                            }
                             cssKey = parts.shift();
+                            //convert css dash syntax into js syntax example background-color - > backgroundColor
                             jsKey = cssKey.replace(/(-\w)/, function (v) {
                                 return v.substring(1).toUpperCase();
                             });
 
-
-                            value = (parts.shift() || '').replace(/^['"]/, '').replace(/['"]$/, '');
+                            //reconstruct right side of the = sign 
+                            value = parts.join('=').replace(/^"/, '').replace(/"$/, '');
                             if (value) {
+                                //replace template variables 
                                 value = value.replace(/\$\{[^\}]*\}/g, function (v) {
                                     return state[v.substring(2, v.length - 1)];
                                 });
