@@ -516,6 +516,37 @@
         );
     }
 
+    /**
+     * handle async or sync result
+     * @param elm
+     * @param html
+     */
+    function setHtmlContent(elm, html) {
+        if (typeof html == "string") {
+            insertHTML(html);
+        } else if (html && html.then) {
+            html.then(
+                function (data) {
+                    insertHTML(data);
+                }
+            )
+        }
+        function insertHTML(html) {
+            if (elm.tagName === "input" || elm.tagName === 'textarea') {
+                if (!Array.isArray(elm.orgValue)) {
+                    elm.orgValue = [elm.value];
+                }
+                elm.value = html;
+            } else {
+                if (!Array.isArray(elm.orgValue)) {
+                    elm.orgValue = [elm.innerHTML];
+                }
+                elm.innerHTML = html;
+
+            }
+        }
+    }
+
     function makeStateChangeListener(targetKey, sources, selector, cssRules) {
 
         console.log('makeStateChangeListener for: ' + targetKey + ', sources: ' + sources);
@@ -615,23 +646,23 @@
                                 value = value.replace(/\$\{[^\}]*\}/g, function (v) {
                                     return state[v.substring(2, v.length - 1)];
                                 });
-                                
+                                state[jsKey] = eval(value) || '';
                                 //if there is no property key like jsKey warn if there is no content property
                                 if (elm.style[jsKey] === undefined) {
                                     //if a content property is in the rule then replace the keys in the content
                                     //with the evaluated value
-                                    if (content){
-                                        placeholder = new RegExp('\\$\\{' + jsKey + '\\}', 'g');
-                                        try {
-                                            replacer = eval(value) || '';
-                                        } catch(e) {
-                                          replacer = 'ERROR';
-                                          console.error('ERROR evaluating expression ' + value + ', error: ' + e);
-                                        }
-                                        content = content.replace(placeholder, replacer);
-                                    } else {
-                                        console.warn('Trying to set a style key:' + cssKey + ' that does not exist!');
-                                    }
+                                    // if (content){
+                                    //     placeholder = new RegExp('\\$\\{' + jsKey + '\\}', 'g');
+                                    //     try {
+                                    //         replacer = eval(value) || '';
+                                    //     } catch(e) {
+                                    //       replacer = 'ERROR';
+                                    //       console.error('ERROR evaluating expression ' + value + ', error: ' + e);
+                                    //     }
+                                    //     content = content.replace(placeholder, replacer);
+                                    // } else {
+                                    //     console.warn('Trying to set a style key:' + cssKey + ' that does not exist!');
+                                    // }
                                 } else {
                                     elm.style[jsKey] = eval(value);;
                                 }
@@ -644,27 +675,8 @@
                         if (matches = content.match(/^url\(['"]([^)]*)['"]\)$/)) {
                             loadContent(matches[1], elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
-                            var html = matches[1];
-
-                            if (SCRIPTEXPR.test(html) || EVENTEXPR.test(html)) {
-                                console.error('unsafe content ignored!');
-                            } else {
-                                if (elm.tagName === "input" || elm.tagName === 'textarea') {
-                                    if (!Array.isArray(elm.orgValue)) {
-                                        elm.orgValue = [elm.value];
-                                    }
-                                    elm.value = html;
-                                } else {
-                                    if (!Array.isArray(elm.orgValue)) {
-                                        elm.orgValue = [elm.innerHTML];
-                                    }
-                                    elm.innerHTML = html;
-                                }
-                                //if we has a change in the html rebind all events if needed
-                                //so events bind seems to work as styles whenever an element
-                                //matches the css rule the event is present
-
-                            }
+                            var html = eval(matches[1]);
+                            setHtmlContent(elm, html);
                         }
                     }
                 } else {
