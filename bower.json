@@ -1,0 +1,24 @@
+{
+  "name": "xcss",
+  "main": "xcss.js",
+  "homepage": "https://github.com/spreeuwers/xcss",
+  "authors": [
+    "isc05210 <e.spreeuwers@gmail.com>"
+  ],
+  "description": "css javascript framework",
+  "moduleType": [],
+  "keywords": [
+    "css",
+    "location",
+    "state"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
