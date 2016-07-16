@@ -108,10 +108,10 @@
 
     }
 
-    function bindAllContent() {
+    function bindAllContent(parent) {
         Object.keys(contentBindings).forEach(
             function (selector) {
-                insertContent(contentBindings, selector);
+                insertContent(contentBindings, selector,null, null, null, parent);
             }
         );
     }
@@ -194,7 +194,7 @@
                 invalidKeyword = '';
 
                 if (parts.length > 2) {
-                    //read first thre fields
+                    //read first three fields
                     target = parts.shift().trim();
                     keyword = parts.shift().trim();
                     ucKeyword = keyword.toUpperCase();
@@ -231,10 +231,14 @@
     }
 
 
-    function insertContent(cssRules, selector, target, sources, keyword) {
+    function insertContent(cssRules, selector, target, sources, keyword, parent) {
         var url, matches;
         var content = cssRules[selector].style.content || '';
+
         var targetElms = document.querySelectorAll(selector);
+        if (parent){
+            targetElms = parent.querySelectorAll(selector);
+        }
 
         if (!/:(before|after)/.test(selector)) {
             if (!contentBindings[selector]) {
@@ -507,6 +511,7 @@
                                 elm.innerHTML = data;
                                 elm.dataHtml = data;
                             }
+                            bindAllContent(elm);
                         }
                     }
 
