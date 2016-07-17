@@ -2,6 +2,8 @@
 (function xcss() {
 
     "use strict";
+    var MAX_NESTING_LEVEL = 100;
+
     var allCSSRules = {};
     var visitedRules = {};
     var evtBindings = {};
@@ -108,10 +110,16 @@
 
     }
 
-    function bindAllContent(parent) {
+    function bindAllContent(parent, level) {
+
+        if (level && level > MAX_NESTING_LEVEL){
+            console.log('Max nesting level is 10');
+            return;
+        }
+        level++;
         Object.keys(contentBindings).forEach(
             function (selector) {
-                insertContent(contentBindings, selector,null, null, null, parent);
+                insertContent(contentBindings, selector,null, null, null, parent, level);
             }
         );
     }
@@ -231,7 +239,7 @@
     }
 
 
-    function insertContent(cssRules, selector, target, sources, keyword, parent) {
+    function insertContent(cssRules, selector, target, sources, keyword, parent, level) {
         var url, matches;
         var content = cssRules[selector].style.content || '';
 
@@ -271,7 +279,7 @@
                     if (elm.insertedContent !== cssRules[selector].style.content) {
                         elm.insertedContent = cssRules[selector].style.content;
                         if (url) {
-                            loadContent(url, elm);
+                            loadContent(url, elm, level);
                         } else {
                             elm.innerHTML = cssRules[selector].style.content.slice(1, -1);
                         }
@@ -483,7 +491,7 @@
     }
 
 
-    function loadContent(url, elm) {
+    function loadContent(url, elm, level) {
         fetch(url).then(
             function (response) {
 
@@ -499,19 +507,21 @@
                             }
                             elm.value = data;
                         } else {
-                            //if we has a change in the html rebind all events if needed
-                            //so events bind seems to work as styles whenever an element
-                            //matches the css rule the event is present
+                            //store the original html content in the dataHTML property
                             if (!Array.isArray(elm.orgValue)) {
                                 elm.orgValue = [elm.innerHTML];
                             }
                             //only update if needed so we keep element events working
-                            //no need to bind events again
+                            //no need to bind events again if the content is not changed
                             if (data !== elm.dataHtml) {
                                 elm.innerHTML = data;
                                 elm.dataHtml = data;
+                                //if we have a change in the html rebind all events if needed
+                                //so events bind seems to work as styles whenever an element
+                                //matches the css rule the event is present
+                                bindAllContent(elm, level || 0);
                             }
-                            bindAllContent(elm);
+
                         }
                     }
 
