@@ -1,15 +1,15 @@
 .container{
     content:url(container.html);
     padding:5px;
-    background-color: green;
+    background-color: black;
 }
 .container1{
     content:url(container1.html);
     padding:5px;
-    background-color: red;
+    background-color: silver;
 }
 .container2{
     content:url(container2.html);
     padding:5px;
-    background-color: yellow;
+    background-color: white;
 }
