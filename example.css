@@ -25,12 +25,12 @@
 
 .dlg APPLIES my-dialog {}
 
-#btn1 ONCLICK + buttonclicked {}
-#btn2 ONCLICK ~ buttonclicked {}
+#btn1 ONCLICK + buttonclicked {}  /*add substate */
+#btn2 ONCLICK ~ buttonclicked {}  /*delete substate*/
 #btn3 ONCLICK   btn3clicked[data-value] {}
 #btn4 ONCLICK   load[data-value] {}
 #btn5 ONCLICK > alt_sub_state {}
-#btn7 ONCLICK .allway_add_state {}
+#btn7 ONCLICK .allway_add_state {}  /*always add thr state string to the path*/
 #btn8 ONCLICK #absolute_state {}
 #btn9 ONCLICK ~ * {}
 #btn10 ONCLICK > .alt_sub_state {/*toggle last state*/}
