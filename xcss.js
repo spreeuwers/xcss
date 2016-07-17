@@ -787,6 +787,9 @@
                 //allways add
                 prevHash.push(path);
                 location.hash = prevHash.join('/') + parms;
+            } else if (hash.indexOf(':empty') === 0) {
+                //do nothing with state just evaluate the js between [  ]
+
             } else {
                 location.hash = hash + parms;
             }

@@ -34,6 +34,7 @@
 #btn8 ONCLICK #absolute_state {}
 #btn9 ONCLICK ~ * {}
 #btn10 ONCLICK > .alt_sub_state {/*toggle last state*/}
+#btn11 ONCLICK :empty [void="alert('hoi')"]  {} /*do some js function */
 
 #myrange ONCHANGE rotate[value] {}
 
