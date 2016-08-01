@@ -1,0 +1,15 @@
+.container{
+    content:"<div class=\"container1\">hello world!</div>";
+    padding:5px;
+    background-color: black;
+}
+.container1{
+    content:'<div class=container2>hello world! container 1</div>';
+    padding:5px;
+    background-color: navy;
+}
+.container2{
+    content:'<div class=container>hello world! container 2</div>';
+    padding:5px;
+    background-color: blue;
+}

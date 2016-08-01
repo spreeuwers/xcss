@@ -56,10 +56,9 @@
     ////////////////////////////////////////////////////////////////
 
     function stateChanged() {
-        //var state = {};
         var state = location.hash.replace(/^#\/?/, '').split('/').map(
             function (state) {
-                var parts = state.split('?');
+                var parts = state.split('?');//pseudo querystring
                 var parms = (parts[1] || '').split('&');
                 var path = parts[0];
                 var result = {};
@@ -78,7 +77,7 @@
         state.path = state.map(function (s) {
             return Object.keys(s)[0];
         }).join('/');
-        //collect all parameters
+        //collect all parameter key/values in the state object
         state.params = {};
         state.forEach(
             function (s) {
@@ -92,13 +91,13 @@
         );
 
         console.log('state:', state);
-        //postMessage(state, location.href);
+        //invoke all stateChangeListeners
         stateListeners.forEach(
             function (listener) {
                 listener(state);
             }
         );
-
+        //rebin all events after state change
         window.setTimeout(
             function () {
                 bindAllEvents();
@@ -113,7 +112,7 @@
     function bindAllContent(parent, level) {
 
         if (level && level > MAX_NESTING_LEVEL){
-            console.log('Max nesting level is 10');
+            console.log('Max nesting level is: '+ MAX_NESTING_LEVEL);
             return;
         }
         level++;
@@ -238,7 +237,7 @@
         );
     }
 
-
+    //insertContent for any css role having a content property without before/after pseudo selector
     function insertContent(cssRules, selector, target, sources, keyword, parent, level) {
         var url, matches;
         var content = cssRules[selector].style.content || '';
@@ -247,7 +246,7 @@
         if (parent){
             targetElms = parent.querySelectorAll(selector);
         }
-
+        //only handle rules without :before/:after
         if (!/:(before|after)/.test(selector)) {
             if (!contentBindings[selector]) {
                 contentBindings[selector] = {style: {content: allCSSRules[selector].style.content}};
@@ -273,7 +272,7 @@
 
             }
 
-
+            //for each element matching the rule insertContent
             [].slice.call(targetElms).forEach(
                 function (elm) {
                     if (elm.insertedContent !== cssRules[selector].style.content) {
@@ -281,7 +280,8 @@
                         if (url) {
                             loadContent(url, elm, level);
                         } else {
-                            elm.innerHTML = cssRules[selector].style.content.slice(1, -1);
+                            var html = cssRules[selector].style.content.slice(1, -1);
+                            setHtmlContent(elm, html, level)
                         }
                     }
                 }
@@ -494,38 +494,13 @@
     function loadContent(url, elm, level) {
         fetch(url).then(
             function (response) {
-
                 response.text().then(function (data) {
                     console.log(data);
                     if (SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
                         console.error('unsafe content ignored!');
                     } else {
-
-                        if (elm.tagName === "input" || elm.tagName === 'textarea') {
-                            if (!Array.isArray(elm.orgValue)) {
-                                elm.orgValue = [elm.value];
-                            }
-                            elm.value = data;
-                        } else {
-                            //store the original html content in the dataHTML property
-                            if (!Array.isArray(elm.orgValue)) {
-                                elm.orgValue = [elm.innerHTML];
-                            }
-                            //only update if needed so we keep element events working
-                            //no need to bind events again if the content is not changed
-                            if (data !== elm.dataHtml) {
-                                elm.innerHTML = data;
-                                elm.dataHtml = data;
-                                //if we have a change in the html rebind all events if needed
-                                //so events bind seems to work as styles whenever an element
-                                //matches the css rule the event is present
-                                bindAllContent(elm, level || 0);
-                            }
-
-                        }
+                        setHtmlContent(elm, data, level);
                     }
-
-
                 });
             }
         );
@@ -536,17 +511,18 @@
      * @param elm
      * @param html
      */
-    function setHtmlContent(elm, html) {
+    function setHtmlContent(elm, html, level) {
         if (typeof html == "string") {
-            insertHTML(html);
+            insertHTML(html, level);
         } else if (html && html.then) {
             html.then(
                 function (data) {
-                    insertHTML(data);
+                    insertHTML(data, level);
                 }
             )
         }
-        function insertHTML(html) {
+        
+        function insertHTML(html, level) {
             if (elm.tagName === "input" || elm.tagName === 'textarea') {
                 if (!Array.isArray(elm.orgValue)) {
                     elm.orgValue = [elm.value];
@@ -556,7 +532,16 @@
                 if (!Array.isArray(elm.orgValue)) {
                     elm.orgValue = [elm.innerHTML];
                 }
-                elm.innerHTML = html;
+                //only update if needed so we keep element events working
+                //no need to bind events again if the content is not changed
+                if (html !== elm.dataHtml) {
+                    elm.innerHTML = html;
+                    elm.dataHtml = html;
+                    //if we have a change in the html rebind all events if needed
+                    //so events bind seems to work as styles whenever an element
+                    //matches the css rule the event is present
+                    bindAllContent(elm, level || 0);
+                }
 
             }
         }
@@ -662,22 +647,9 @@
                                     return state[v.substring(2, v.length - 1)];
                                 });
                                 state[jsKey] = eval(value) || '';
-                                //if there is no property key like jsKey warn if there is no content property
+                                //if there is no property key like jsKey warn the programmer
                                 if (elm.style[jsKey] === undefined) {
-                                    //if a content property is in the rule then replace the keys in the content
-                                    //with the evaluated value
-                                    // if (content){
-                                    //     placeholder = new RegExp('\\$\\{' + jsKey + '\\}', 'g');
-                                    //     try {
-                                    //         replacer = eval(value) || '';
-                                    //     } catch(e) {
-                                    //       replacer = 'ERROR';
-                                    //       console.error('ERROR evaluating expression ' + value + ', error: ' + e);
-                                    //     }
-                                    //     content = content.replace(placeholder, replacer);
-                                    // } else {
-                                    //     console.warn('Trying to set a style key:' + cssKey + ' that does not exist!');
-                                    // }
+                                     console.warn('Trying to set a style key:' + cssKey + ' that does not exist!');
                                 } else {
                                     elm.style[jsKey] = eval(value);;
                                 }
