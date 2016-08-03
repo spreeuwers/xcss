@@ -1,0 +1,13 @@
+
+button ONCLICK btnClick[id] {
+    /*add click event to all buttons that adds btnClick + id param to the hash state  */
+}
+#msg WHEN btnClick[id] {
+    /* Whenever the state changes and matches btnClick use the inject parameter on the state */
+    content:"`clicked on: ${state.id}`"
+}
+
+#msg{
+    border:1px solid black;
+    height:100px;
+}
