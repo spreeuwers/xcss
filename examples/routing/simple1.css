@@ -11,3 +11,10 @@ button ONCLICK btnClick[id] {
     border:1px solid black;
     height:100px;
 }
+
+pre[css-source] extends #msg{
+    display:block;
+    overflow:scroll;
+    content:url(simple1.css);
+    height:30rem;
+}

@@ -410,9 +410,14 @@
         ).join(' ');
 
         var self = cssRules[selector];
-        console.log('adding rule: ' + target + '{' + self.style.cssText + newCssText + '}');
-        var idx = styleSheet.insertRule(target + '{' + self.style.cssText + newCssText + '}', styleSheet.cssRules.length);
+        console.log('adding rule: ' + target + '{' + newCssText + self.style.cssText + '}');
+        var idx = styleSheet.insertRule(target + '{' + newCssText +  self.style.cssText + '}', styleSheet.cssRules.length);
         cssRules[target] = styleSheet.cssRules[idx];
+        //load content is defined
+        if (cssRules[target].style.content){
+            var level = 0;
+            insertContent(cssRules, target,  target, sources, keyword, document, level)
+        }
     }
 
     /**
