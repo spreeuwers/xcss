@@ -15,9 +15,10 @@ my-content{
     height:100px;
 }
 
-pre[css-source] extends #msg{
+textarea[css-source] extends #msg{
     display:block;
     overflow:scroll;
     content:url(simple1.css);
-    height:30rem;
+    height:25rem;
+    width:100%;
 }
