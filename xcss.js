@@ -44,10 +44,11 @@
     var styleSheet = addNewStylesheet();
     var components = {};
 
-    document.addEventListener('DOMContentLoaded', processCSSRules);
+    document.addEventListener('DOMContentLoaded', processCSSRulesAsync);
+    //document.addEventListener('onload', processCSSRules);
     window.addEventListener('hashchange', stateChanged);
     window.addEventListener('resize', pullBoundElements);
-    stateChanged();
+
 
     return;
 
@@ -168,6 +169,12 @@
 
     }
 
+
+    function processCSSRulesAsync(){
+        //wait 100 ms before collecting the stylesheetrules
+        //so they can be loaded bu the browser
+        window.setTimeout(processCSSRules,100);
+    }
     /**
      *
      */
@@ -177,6 +184,7 @@
         collectRules(document);
         compileRules(allCSSRules);
         console.timeEnd('processCSSRules');
+        stateChanged();
     }
 
     /**
@@ -789,6 +797,7 @@
                 collectRules(styleSheet);
             }
         );
+        console.debug('collected nr of rules: ' + Object.keys(allCSSRules).length);
     }
 
     function addNewStylesheet() {
