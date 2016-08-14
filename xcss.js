@@ -783,7 +783,12 @@
         };
     }
 
-    function collectRules(container) {
+    /**
+     * recursively walk through the stylesheets of same origin and collect all css rules 
+     * @param container
+     * @param inner
+     */
+    function collectRules(container, inner) {
         [].slice.call(container.styleSheets || []).forEach(
             function (styleSheet) {
                 if ((styleSheet.href || '').indexOf(window.location.origin) === 0) {
@@ -794,10 +799,12 @@
                         }
                     );
                 }
-                collectRules(styleSheet);
+                collectRules(styleSheet,true);
             }
         );
-        console.debug('collected nr of rules: ' + Object.keys(allCSSRules).length);
+        if (!inner) {
+            console.debug('collected nr of rules: ' + Object.keys(allCSSRules).length);
+        }
     }
 
     function addNewStylesheet() {
