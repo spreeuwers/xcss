@@ -1,6 +1,6 @@
 button[action="registreer"] ONCLICK register[action] {}
-button[action="loadComments"] ONCLICK load[action] {}
+button[action="loadComments"] ONCLICK +load[date="new Date().getTime()"] {}
 
-form[name="register"] textarea WHEN load[action]{
-    content:"url('comments.txt')";
+form[name="register"] textarea WHEN * load[action]{
+    content:url('comments.txt');
 }

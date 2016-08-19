@@ -2,10 +2,17 @@
 button ONCLICK btnClick[id] {
     /*add click event to all buttons that adds btnClick + id param to the hash state  */
 }
+
+#msg WHEN page1 {
+    /* Whenever the state changes and matches btnClick use the inject parameter on the state */
+    content:url(page1.html)
+}
 #msg WHEN btnClick[id] {
     /* Whenever the state changes and matches btnClick use the inject parameter on the state */
     content:"`clicked on: ${state.id}<br><my-content></my-content>`"
 }
+
+
 my-content{
     content:"<button id='btn3'>button3</button>"
 }

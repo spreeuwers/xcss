@@ -101,9 +101,9 @@
         //rebin all events after state change
         window.setTimeout(
             function () {
-                bindAllEvents();
-                bindAllClasses();
-                bindAllContent();
+                //bindAllEvents();
+                //bindAllClasses();
+                //bindAllContent();
                 pullBoundElements();
             }, 100
         );
@@ -124,11 +124,12 @@
         );
     }
 
-    function bindAllEvents() {
+    function bindAllEvents(parent) {
         Object.keys(evtBindings).forEach(
             function bind(target) {
                 //console.log('binding message events: ' + msg + ' to ' +  targets);
-                var elms = document.querySelectorAll(target);
+                var scope = parent || document;
+                var elms = scope.querySelectorAll(target);
                 for (var i = 0; i < elms.length; i++) {
                     //elms[i].addEventListener(event, makeEventListener(key));
                     var handler = evtBindings[target];
@@ -148,10 +149,11 @@
         );
     }
 
-    function bindAllClasses() {
+    function bindAllClasses(parent) {
         Object.keys(classBindings).forEach(
             function (target) {
-                var targetElms = document.querySelectorAll(target) || [];
+                var scope = parent || document;
+                var targetElms = scope.querySelectorAll(target) || [];
                 var sources = classBindings[target] || [];
                 [].slice.call(targetElms).forEach(
                     function (elm) {
@@ -536,7 +538,8 @@
         }
         
         function insertHTML(html, level) {
-            if (elm.tagName === "input" || elm.tagName === 'textarea') {
+            var tagName = elm.tagName.toLowerCase();
+            if (tagName === "input" || tagName === 'textarea') {
                 if (!Array.isArray(elm.orgValue)) {
                     elm.orgValue = [elm.value];
                 }
@@ -554,6 +557,8 @@
                     //so events bind seems to work as styles whenever an element
                     //matches the css rule the event is present
                     bindAllContent(elm, level || 0);
+                    bindAllEvents(elm);
+                    bindAllClasses(elm);
                 }
 
             }
@@ -610,7 +615,7 @@
             var elms = document.querySelectorAll(elmQuery);
             for (var i = 0; i < elms.length; i++) {
                 var elm = elms[i];
-                console.log('event handled by ', elm.id);
+                console.log('event handled by ', elmQuery + '[' + i + ']');
                 if (elm.cssText === undefined) {
                     elm.cssText = elm.style.cssText || '';
                 }

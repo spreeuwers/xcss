@@ -65,7 +65,7 @@ nav>ul li{
     padding:3px;
 }
 
-main>article WHEN navigeer[link]{
+main>article WHEN navigeer * [link]{
     content:url(${link}.html);
     background-color: green;
 }
@@ -76,7 +76,7 @@ main>article {
     border:1px solid black;
 }
 
-main>article WHEN navigeer[link] WHEN V{
+main>article WHEN navigeer * [link] WHEN V{
     background-color: green;
 }
 
