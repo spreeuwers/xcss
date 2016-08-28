@@ -445,9 +445,18 @@
         [].slice.call(targetElms).forEach(
             function (elm) {
                 sources.forEach(
-                    function (className) {
-                        console.log('applying ' + className + ' to ' + target);
-                        elm.classList.add(className);
+                    function (src) {
+                        var m;
+                        
+                        if (m = src.match(/^\[(.*)\]$/) ) {
+                            var attr = m[1].split('=');
+                            console.log('applying attr: ' + m[1] + ' to ' + target);
+                            elm.setAttribute(attr[0],attr[1]||attr[0]);
+                        }  else {
+                            console.log('applying class: ' + src + ' to ' + target);
+                            elm.classList.add(src);
+                        }       
+                        
 
                     }
                 );

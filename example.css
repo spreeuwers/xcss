@@ -24,6 +24,7 @@
 }
 
 .dlg APPLIES my-dialog {}
+.dlg APPLIES [key="value"] {}
 
 #btn1 ONCLICK + buttonclicked {}  /*add substate */
 #btn2 ONCLICK ~ buttonclicked {}  /*delete substate*/
