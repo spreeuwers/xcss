@@ -288,9 +288,13 @@
                     if (elm.insertedContent !== cssRules[selector].style.content) {
                         elm.insertedContent = cssRules[selector].style.content;
                         if (url) {
+                            if (url.indexOf('@') === 0){
+                                url = elm.getAttribute(url.substring(1));
+
+                            }
                             loadContent(url, elm, level);
                         } else {
-                            var html = cssRules[selector].style.content.slice(1, -1);
+                            var html = eval(cssRules[selector].style.content);
                             setHtmlContent(elm, html, level)
                         }
                     }
@@ -447,7 +451,7 @@
                 sources.forEach(
                     function (src) {
                         var m;
-                        
+
                         if (m = src.match(/^\[(.*)\]$/) ) {
                             var attr = m[1].split('=');
                             console.log('applying attr: ' + m[1] + ' to ' + target);
@@ -455,8 +459,8 @@
                         }  else {
                             console.log('applying class: ' + src + ' to ' + target);
                             elm.classList.add(src);
-                        }       
-                        
+                        }
+
 
                     }
                 );
@@ -519,8 +523,9 @@
         fetch(url).then(
             function (response) {
                 response.text().then(function (data) {
+                    console.log(url);
                     console.log(data);
-                    if (SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
+                    if (url.indexOf('://')>0 && SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
                         console.error('unsafe content ignored!');
                     } else {
                         setHtmlContent(elm, data, level);
@@ -545,7 +550,7 @@
                 }
             )
         }
-        
+
         function insertHTML(html, level) {
             var tagName = elm.tagName.toLowerCase();
             if (tagName === "input" || tagName === 'textarea') {
@@ -652,7 +657,7 @@
                     parms.forEach(
                         function (parm) {
                             var parts = parm.split('=');
-                            //simple case : /path[propertyname] just replace content with value  
+                            //simple case : /path[propertyname] just replace content with value
                             if (parts.length === 1  && content) {
                                 placeholder = new RegExp('\\$\\{' + parm + '\\}', 'g');
                                 replacer = (state || {})[parms] || '';
@@ -666,10 +671,10 @@
                                 return v.substring(1).toUpperCase();
                             });
 
-                            //reconstruct right side of the = sign 
+                            //reconstruct right side of the = sign
                             value = parts.join('=').replace(/^"/, '').replace(/"$/, '');
                             if (value) {
-                                //replace template variables 
+                                //replace template variables
                                 value = value.replace(/\$\{[^\}]*\}/g, function (v) {
                                     return state[v.substring(2, v.length - 1)];
                                 });
@@ -798,7 +803,7 @@
     }
 
     /**
-     * recursively walk through the stylesheets of same origin and collect all css rules 
+     * recursively walk through the stylesheets of same origin and collect all css rules
      * @param container
      * @param inner
      */

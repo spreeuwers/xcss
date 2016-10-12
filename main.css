@@ -1,4 +1,15 @@
         button.navbar-toggle ONCLICK navbar{}
+        button.navbar-toggle{
+            content:"<span></span><span></span><span></span><span></span>"
+        }
+
+
+        button.navbar-toggle span:not(:first-of-type)  APPLIES icon-bar {
+
+        }
+        button.navbar-toggle span:first-of-type  APPLIES sr-only {
+
+        }
 
         div#navbar {
             display:none;
