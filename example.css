@@ -104,7 +104,14 @@ time-component COMPONENT newTime [templateUrl="time-component.html"] {
     overflow:hidden;
     /*          content:"<input name='day'><input name='month'><input name='year'>";*/
 }
-/* feature?*/
-form[data-person] BEAN script.company.Person[ID]{
+
+div[sizing]{
+    background-color: red;
+    width:50%;
+    height:30px;
+}
+
+div[sizing] SIZE article  {
+  content:"elm.offsetWidth"
 
 }

@@ -10,7 +10,7 @@
     var classBindings = {};
     var contentBindings = {};
     var pullBindings = {};
-
+    var sizeBindings = {};
     var stateListeners = [];
     var WHEN = 'when';
     var AND = 'and';
@@ -18,6 +18,7 @@
     var APPLIES = 'applies';
     var EVENTS = [];
     var LOGICAL = 'LOGICAL';
+    var prevState = {};
 
     var KEYWORD_FUNCTIONS = {
         EXTENDS: extendRule,
@@ -25,6 +26,7 @@
         COMPONENT: componentRule,
         WHEN: stateRule,
         PULL: alignRule,
+        SIZE: sizeRule,
         AND: LogicKeyword,
         OR: LogicKeyword
     };
@@ -48,6 +50,7 @@
     //document.addEventListener('onload', processCSSRules);
     window.addEventListener('hashchange', stateChanged);
     window.addEventListener('resize', pullBoundElements);
+    window.addEventListener('resize', sizeBoundElements);
 
 
     return;
@@ -98,7 +101,7 @@
                 listener(state);
             }
         );
-        //rebin all events after state change
+        //rebind all events after state change
         window.setTimeout(
             function () {
                 //bindAllEvents();
@@ -107,19 +110,20 @@
                 pullBoundElements();
             }, 100
         );
+        prevState = state;
 
     }
 
     function bindAllContent(parent, level) {
 
-        if (level && level > MAX_NESTING_LEVEL){
-            console.log('Max nesting level is: '+ MAX_NESTING_LEVEL);
+        if (level && level > MAX_NESTING_LEVEL) {
+            console.log('Max nesting level is: ' + MAX_NESTING_LEVEL);
             return;
         }
         level++;
         Object.keys(contentBindings).forEach(
             function (selector) {
-                insertContent(contentBindings, selector,null, null, null, parent, level);
+                insertContent(contentBindings, selector, null, null, null, parent, level);
             }
         );
     }
@@ -135,8 +139,11 @@
                     var handler = evtBindings[target];
                     if (!elms[i].xcssHandler) {
                         console.log('binding message events: ' + handler.hash + ' to ' + target);
-                        if (handler.hash === 'prevent'){
-                            elms[i].xcssHandler = function(evt){evt.preventDefault();evt.stopPropagation();}
+                        if (handler.hash === 'prevent') {
+                            elms[i].xcssHandler = function (evt) {
+                                evt.preventDefault();
+                                evt.stopPropagation();
+                            }
                         } else {
                             elms[i].xcssHandler = makeEventListener(handler.hash);
                         }
@@ -172,11 +179,12 @@
     }
 
 
-    function processCSSRulesAsync(){
+    function processCSSRulesAsync() {
         //wait 100 ms before collecting the stylesheetrules
         //so they can be loaded bu the browser
-        window.setTimeout(processCSSRules,100);
+        window.setTimeout(processCSSRules, 100);
     }
+
     /**
      *
      */
@@ -253,7 +261,7 @@
         var content = cssRules[selector].style.content || '';
 
         var targetElms = document.querySelectorAll(selector);
-        if (parent){
+        if (parent) {
             targetElms = parent.querySelectorAll(selector);
         }
         //only handle rules without :before/:after
@@ -288,13 +296,13 @@
                     if (elm.insertedContent !== cssRules[selector].style.content) {
                         elm.insertedContent = cssRules[selector].style.content;
                         if (url) {
-                            if (url.indexOf('@') === 0){
+                            if (url.indexOf('@') === 0) {
                                 url = elm.getAttribute(url.substring(1));
 
                             }
                             loadContent(url, elm, level);
                         } else {
-                            var html = eval(cssRules[selector].style.content);
+                            var html = eval(cssRules[selector].style.content.slice(1, -1));
                             setHtmlContent(elm, html, level)
                         }
                     }
@@ -326,6 +334,40 @@
         );
     }
 
+    function sizeElements(target, cssRule) {
+
+        console.log('sizeElements');
+
+        if (!cssRule){return};
+        var style = cssRule.style;
+        var cssText = style.cssText.split('; ').filter(
+            function (cssLine) {
+                return cssLine.trim().indexOf('content:') < 0;
+            }
+        ).join(';\n');
+
+        var content = style.content;
+
+        var targetElms = document.querySelectorAll(target);
+        [].slice.call(targetElms).forEach(
+            function (elm) {
+
+
+                elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
+                    var expr = v.substring(2, v.length - 1);
+                    return eval(expr);
+                });
+
+                if (content) {
+                    var html = '' + eval(content.slice(1, -1));
+                    setHtmlContent(elm,html);
+                }
+
+            }
+        );
+
+    }
+
     function alignRule(cssRules, selector, target, sources, keyword) {
         pullBindings[target] = sources;
         pullElements(target, sources[0]);
@@ -339,6 +381,25 @@
                 window.setTimeout(
                     function () {
                         pullElements(target, pullBindings[target]);
+                    }, 100
+                );
+            }
+        )
+    }
+
+    function sizeRule(cssRules, selector, target, sources, keyword) {
+        sizeBindings[target] = cssRules[selector];
+        sizeElements(target, sizeBindings[target]);
+        sizeBoundElements();
+
+    }
+
+    function sizeBoundElements() {
+        Object.keys(sizeBindings).forEach(
+            function (target) {
+                window.setTimeout(
+                    function () {
+                        sizeElements(target, sizeBindings[target]);
                     }, 100
                 );
             }
@@ -425,12 +486,12 @@
 
         var self = cssRules[selector];
         console.log('adding rule: ' + target + '{' + newCssText + self.style.cssText + '}');
-        var idx = styleSheet.insertRule(target + '{' + newCssText +  self.style.cssText + '}', styleSheet.cssRules.length);
+        var idx = styleSheet.insertRule(target + '{' + newCssText + self.style.cssText + '}', styleSheet.cssRules.length);
         cssRules[target] = styleSheet.cssRules[idx];
         //load content is defined
-        if (cssRules[target].style.content){
+        if (cssRules[target].style.content) {
             var level = 0;
-            insertContent(cssRules, target,  target, sources, keyword, document, level)
+            insertContent(cssRules, target, target, sources, keyword, document, level)
         }
     }
 
@@ -452,11 +513,11 @@
                     function (src) {
                         var m;
 
-                        if (m = src.match(/^\[(.*)\]$/) ) {
+                        if (m = src.match(/^\[(.*)\]$/)) {
                             var attr = m[1].split('=');
                             console.log('applying attr: ' + m[1] + ' to ' + target);
-                            elm.setAttribute(attr[0],attr[1]||attr[0]);
-                        }  else {
+                            elm.setAttribute(attr[0], attr[1] || attr[0]);
+                        } else {
                             console.log('applying class: ' + src + ' to ' + target);
                             elm.classList.add(src);
                         }
@@ -500,10 +561,13 @@
         [].slice.call(targetElms).forEach(
             function (elm) {
                 console.log('adding eventlistener for ' + newHash);
-                if (newHash === 'prevent'){
-                   elm.xcssHandler = function(evt){evt.preventDefault();evt.stopPropagation();}
+                if (newHash === 'prevent') {
+                    elm.xcssHandler = function (evt) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                    }
                 } else {
-                   elm.xcssHandler = makeEventListener(newHash);
+                    elm.xcssHandler = makeEventListener(newHash);
                 }
                 elm.addEventListener(keyword.substring(2), elm.xcssHandler);
             }
@@ -525,7 +589,7 @@
                 response.text().then(function (data) {
                     console.log(url);
                     console.log(data);
-                    if (url.indexOf('://')>0 && SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
+                    if (url.indexOf('://') > 0 && SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
                         console.error('unsafe content ignored!');
                     } else {
                         setHtmlContent(elm, data, level);
@@ -609,7 +673,7 @@
 
         function stateChangeListener(newState) {
             var matches, parms;
-            var jsKey,cssKey;
+            var jsKey, cssKey;
             var value;
             var placeholder;
             var replacer;
@@ -625,6 +689,17 @@
                 }
             );
 
+            var content = cssRules[selector].style.content;
+            var match = targetStates.filter(function (s) {
+                return s.pattern.test(path);
+            })[0];
+
+            console.log(prevState);
+
+            var prevMatch = targetStates.filter(function (s) {
+                return s.pattern.test(prevState.path || '');
+            })[0];
+            console.log(prevMatch);
 
             var elms = document.querySelectorAll(elmQuery);
             for (var i = 0; i < elms.length; i++) {
@@ -634,12 +709,7 @@
                     elm.cssText = elm.style.cssText || '';
                 }
 
-                var content = cssRules[selector].style.content;
-                var match = targetStates.filter(function (s) {
-                    return s.pattern.test(path);
-                });
-
-                if (match = match[0]) {
+                if (match) {
                     parms = match.params;
                     //filter content property out before adding the cssText
                     //because an inline style does not behave well having a content property
@@ -647,7 +717,7 @@
                         function (cssLine) {
                             return cssLine.trim().indexOf('content:') < 0;
                         }
-                    ).join('\n');
+                    ).join(';\n');
                     elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
                         return state[v.substring(2, v.length - 1)];
                     });
@@ -658,7 +728,7 @@
                         function (parm) {
                             var parts = parm.split('=');
                             //simple case : /path[propertyname] just replace content with value
-                            if (parts.length === 1  && content) {
+                            if (parts.length === 1 && content) {
                                 placeholder = new RegExp('\\$\\{' + parm + '\\}', 'g');
                                 replacer = (state || {})[parms] || '';
                                 content = content.replace(placeholder, replacer);
@@ -681,16 +751,17 @@
                                 state[jsKey] = eval(value) || '';
                                 //if there is no property key like jsKey warn the programmer
                                 if (elm.style[jsKey] === undefined) {
-                                     console.warn('Trying to set a style key:' + cssKey + ' that does not exist!');
+                                    console.warn('Trying to set a style key:' + cssKey + ' that does not exist!');
                                 } else {
-                                    elm.style[jsKey] = eval(value);;
+                                    elm.style[jsKey] = eval(value);
                                 }
                             }
                         }
                     );
 
-
+                    // load new content but not if the prev location also matched the targetedStates
                     if (content) {
+                        console.log(prevMatch);
                         if (matches = content.match(/^url\(['"]([^)]*)['"]\)$/)) {
                             loadContent(matches[1], elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
@@ -818,7 +889,7 @@
                         }
                     );
                 }
-                collectRules(styleSheet,true);
+                collectRules(styleSheet, true);
             }
         );
         if (!inner) {
