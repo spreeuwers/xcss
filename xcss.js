@@ -207,7 +207,7 @@
                 var keyword = '', target = '', sources = [], invalidKeyword, ucKeyword, lcKeyword;
                 var strings = {};
                 var encodedSelector = selector.split('"').map(
-                    (w, i)=> {
+                    function (w, i) {
                         if (i % 2 === 1) {
                             strings['$' + i] = w;
                             return '$' + i;
@@ -233,7 +233,7 @@
 
                 if (parts.length > 2) {
                     //read first three fields
-                    target = parts.shift().trim();
+                    target = parts.shift().trim().replace(/"\$(\d+)"/g, '"' + strings['$1'] + '"');
                     keyword = parts.shift().trim();
                     ucKeyword = keyword.toUpperCase();
                     lcKeyword = keyword.toLowerCase();
@@ -244,7 +244,9 @@
                             return !keywordType;
                         }
                     ).map(
-                        x => x.replace(/"\$(\d+)"/g, '"' + strings['$1'] + '"')
+                        function (x) {
+                            return x.replace(/"\$(\d+)"/g, '"' + strings['$1'] + '"');
+                        }
                     );
 
                     if (invalidKeyword) {
@@ -362,64 +364,65 @@
             return
         }
         ;
-        cssRules.forEach(cssRule => {
+        cssRules.forEach(
+            function (cssRule) {
 
-            var style = cssRule.style;
-            var cssText = style.cssText.split('; ').filter(
-                function (cssLine) {
-                    return cssLine.trim().indexOf('content:') < 0;
-                }
-            ).join(';\n');
+                var style = cssRule.style;
+                var cssText = style.cssText.split('; ').filter(
+                    function (cssLine) {
+                        return cssLine.trim().indexOf('content:') < 0;
+                    }
+                ).join(';\n');
 
-            var content = style.content;
+                var content = style.content;
 
-            var targetElms = document.querySelectorAll(target);
-            [].slice.call(targetElms).forEach(
-                function (elm) {
+                var targetElms = document.querySelectorAll(target);
+                [].slice.call(targetElms).forEach(
+                    function (elm) {
 
-                    var pos = cssRule.selectorText.toUpperCase().indexOf(' SIZE ');
-                    var text, width = {}, height = {};
+                        var pos = cssRule.selectorText.toUpperCase().indexOf(' SIZE ');
+                        var text, width = {}, height = {};
 
-                    var condition = cssRule.selectorText.substring(pos + 6);
-                    var result = false;
-                    var matches = condition.match(/(width|height)\[([^=]*)="(.*)"\]/);
-                    if (matches) {
-                        var tekst = matches[3];
-                        var div = document.createElement('div');
-                        div.style.cssText = "position='absolute';width:auto;height:auto;white-space: nowrap;display:inline-block";
-                        div.innerHTML = tekst;
-                        elm.appendChild(div);
-                        width[tekst] = div.offsetWidth;
-                        height[tekst] = div.offsetHeight;
-                        elm.removeChild(div);
+                        var condition = cssRule.selectorText.substring(pos + 6);
+                        var result = false;
+                        var matches = condition.match(/(width|height)\[([^=]*)="(.*)"\]/);
+                        if (matches) {
+                            var tekst = matches[3];
+                            var div = document.createElement('div');
+                            div.style.cssText = "position='absolute';width:auto;height:auto;white-space: nowrap;display:inline-block";
+                            div.innerHTML = tekst;
+                            elm.appendChild(div);
+                            width[tekst] = div.offsetWidth;
+                            height[tekst] = div.offsetHeight;
+                            elm.removeChild(div);
+
+                        }
+                        try {
+
+                            result = eval(condition);
+                        } catch (e) {
+                            console.error('invalid SIZE condition!' + condition + ', error: ' + e);
+                        }
+
+                        if (!result) {
+                            return;
+                        }
+                        console.log('SIZE condition: ' + condition);
+
+                        elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
+                            var expr = v.substring(2, v.length - 1);
+                            return eval(expr);
+                        });
+
+                        if (content) {
+                            var html = '' + eval(content.slice(1, -1));
+                            setHtmlContent(elm, html);
+                        }
 
                     }
-                    try {
+                );
 
-                        result = eval(condition);
-                    } catch (e) {
-                        console.error('invalid SIZE condition!' + condition + ', error: ' + e);
-                    }
-
-                    if (!result) {
-                        return;
-                    }
-                    console.log('SIZE condition: ' + condition);
-
-                    elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
-                        var expr = v.substring(2, v.length - 1);
-                        return eval(expr);
-                    });
-
-                    if (content) {
-                        var html = '' + eval(content.slice(1, -1));
-                        setHtmlContent(elm, html);
-                    }
-
-                }
-            );
-
-        });
+            });
 
     }
 
