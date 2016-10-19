@@ -1,3 +1,4 @@
+
 .clr-red {
     color: #FFDDDD;
 }
@@ -5,6 +6,8 @@
 .bg-blue {
     background-color:#1133aa;
 }
+
+
 
 .gekanteld {
     transform:rotate(30deg);
@@ -98,7 +101,7 @@ date-component COMPONENT newDate [templateId="date-component"] {
 }
 
 time-component COMPONENT newTime [templateUrl="time-component.html"] {
-    display:inlineblock;
+    display:inline-block;
     width:150px;
     padding:0px;
     overflow:hidden;
@@ -109,9 +112,20 @@ div[sizing]{
     background-color: red;
     width:50%;
     height:30px;
+    content:"`a long sentence to show how the SIZE keyword can be used`";
+    white-space:nowrap;
+    overflow-x: hidden;
 }
 
-div[sizing] SIZE article  {
-  content:"elm.offsetWidth"
+div[sizing] SIZE  elm.offsetWidth > width[text="A long text demonstrating the SIZE keyword"]  {
+  content:"`A long text demonstrating the SIZE keyword`";
 
 }
+
+div[sizing] SIZE  elm.scrollWidth > elm.offsetWidth  {
+  content:"`Short text`";
+
+}
+
+
+

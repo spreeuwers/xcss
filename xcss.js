@@ -205,7 +205,20 @@
         Object.keys(cssRules).forEach(
             function (selector) {
                 var keyword = '', target = '', sources = [], invalidKeyword, ucKeyword, lcKeyword;
-                var parts = selector.split(KEYWORDS);
+                var strings = {};
+                var encodedSelector = selector.split('"').map(
+                    (w, i)=> {
+                        if (i % 2 === 1) {
+                            strings['$' + i] = w;
+                            return '$' + i;
+                        }
+                        ;
+                        return w;
+                    }
+                ).join('"');
+
+
+                var parts = encodedSelector.split(KEYWORDS);
 
                 if (visitedRules[selector]) {
                     //console.log('skipping visited selector: ' + selector);
@@ -230,6 +243,8 @@
                             invalidKeyword = (keywordType && LogicKeyword !== keywordType) ? keyword : invalidKeyword;
                             return !keywordType;
                         }
+                    ).map(
+                        x => x.replace(/"\$(\d+)"/g, '"' + strings['$1'] + '"')
                     );
 
                     if (invalidKeyword) {
@@ -289,12 +304,12 @@
                 }
 
             }
-
+            var expression = cssRules[selector].style.content;
             //for each element matching the rule insertContent
             [].slice.call(targetElms).forEach(
                 function (elm) {
-                    if (elm.insertedContent !== cssRules[selector].style.content) {
-                        elm.insertedContent = cssRules[selector].style.content;
+                    if (elm.insertedContent !== expression) {
+                        elm.insertedContent = expression;
                         if (url) {
                             if (url.indexOf('@') === 0) {
                                 url = elm.getAttribute(url.substring(1));
@@ -302,8 +317,12 @@
                             }
                             loadContent(url, elm, level);
                         } else {
-                            var html = eval(cssRules[selector].style.content.slice(1, -1));
-                            setHtmlContent(elm, html, level)
+                            try {
+                                var html = eval(expression.slice(1, -1));
+                                setHtmlContent(elm, html, level)
+                            } catch (e) {
+                                concole.error('Could not evaluate expression: ' + expression);
+                            }
                         }
                     }
                 }
@@ -334,37 +353,73 @@
         );
     }
 
-    function sizeElements(target, cssRule) {
+    function sizeElements(target, cssRules) {
 
         console.log('sizeElements');
 
-        if (!cssRule){return};
-        var style = cssRule.style;
-        var cssText = style.cssText.split('; ').filter(
-            function (cssLine) {
-                return cssLine.trim().indexOf('content:') < 0;
-            }
-        ).join(';\n');
 
-        var content = style.content;
+        if (!cssRules) {
+            return
+        }
+        ;
+        cssRules.forEach(cssRule => {
 
-        var targetElms = document.querySelectorAll(target);
-        [].slice.call(targetElms).forEach(
-            function (elm) {
-
-
-                elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
-                    var expr = v.substring(2, v.length - 1);
-                    return eval(expr);
-                });
-
-                if (content) {
-                    var html = '' + eval(content.slice(1, -1));
-                    setHtmlContent(elm,html);
+            var style = cssRule.style;
+            var cssText = style.cssText.split('; ').filter(
+                function (cssLine) {
+                    return cssLine.trim().indexOf('content:') < 0;
                 }
+            ).join(';\n');
 
-            }
-        );
+            var content = style.content;
+
+            var targetElms = document.querySelectorAll(target);
+            [].slice.call(targetElms).forEach(
+                function (elm) {
+
+                    var pos = cssRule.selectorText.toUpperCase().indexOf(' SIZE ');
+                    var text, width = {}, height = {};
+
+                    var condition = cssRule.selectorText.substring(pos + 6);
+                    var result = false;
+                    var matches = condition.match(/(width|height)\[([^=]*)="(.*)"\]/);
+                    if (matches) {
+                        var tekst = matches[3];
+                        var div = document.createElement('div');
+                        div.style.cssText = "position='absolute';width:auto;height:auto;white-space: nowrap;display:inline-block";
+                        div.innerHTML = tekst;
+                        elm.appendChild(div);
+                        width[tekst] = div.offsetWidth;
+                        height[tekst] = div.offsetHeight;
+                        elm.removeChild(div);
+
+                    }
+                    try {
+
+                        result = eval(condition);
+                    } catch (e) {
+                        console.error('invalid SIZE condition!' + condition + ', error: ' + e);
+                    }
+
+                    if (!result) {
+                        return;
+                    }
+                    console.log('SIZE condition: ' + condition);
+
+                    elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
+                        var expr = v.substring(2, v.length - 1);
+                        return eval(expr);
+                    });
+
+                    if (content) {
+                        var html = '' + eval(content.slice(1, -1));
+                        setHtmlContent(elm, html);
+                    }
+
+                }
+            );
+
+        });
 
     }
 
@@ -388,7 +443,10 @@
     }
 
     function sizeRule(cssRules, selector, target, sources, keyword) {
-        sizeBindings[target] = cssRules[selector];
+        if (!sizeBindings[target]) {
+            sizeBindings[target] = [];
+        }
+        sizeBindings[target].push(cssRules[selector]);
         sizeElements(target, sizeBindings[target]);
         sizeBoundElements();
 
