@@ -11,6 +11,7 @@
     var contentBindings = {};
     var pullBindings = {};
     var sizeBindings = {};
+    var timerBindings = {};
     var stateListeners = [];
     var WHEN = 'when';
     var AND = 'and';
@@ -338,15 +339,15 @@
         var targetElms = document.querySelectorAll(target);
         [].slice.call(targetElms).forEach(
             function (elm) {
-                console.log('pulling ' + target + ' to ' + direction);
+                //console.log('pulling ' + target + ' to ' + direction);
                 elm.style.boxSizing = 'border-box';
                 var lm = parseInt(elm.style.marginLeft || '0');
                 var pullRight = elm.parentNode.offsetWidth + elm.parentNode.offsetLeft - (elm.offsetLeft + elm.offsetWidth);
-                console.log('l  ' + elm.offsetLeft);
-                console.log('w  ' + elm.offsetWidth);
-                console.log('pw  ' + elm.offsetParent.offsetWidth);
-                console.log('lm  ' + lm);
-                console.log('pl  ' + pullRight);
+                //console.log('l  ' + elm.offsetLeft);
+                //console.log('w  ' + elm.offsetWidth);
+                //console.log('pw  ' + elm.offsetParent.offsetWidth);
+                //console.log('lm  ' + lm);
+                //console.log('pl  ' + pullRight);
                 elm.style.marginLeft = (lm + pullRight) + 'px';
                 elm.style.marginRight = '0px';
                 elm.style.marginTop = '-70px';
@@ -450,7 +451,6 @@
             sizeBindings[target] = [];
         }
         sizeBindings[target].push(cssRules[selector]);
-        sizeElements(target, sizeBindings[target]);
         sizeBoundElements();
 
     }
@@ -467,6 +467,30 @@
         )
     }
 
+    function timerRule(cssRules, selector, target, sources, keyword) {
+        if (!sizeBindings[target]) {
+            sizeBindings[target] = [];
+        }
+        timerBindings[target].push(cssRules[selector]);
+        timeoutBoundElements(sources);
+
+    }
+
+    function timeoutBoundElements() {
+        Object.keys(timerBindings).forEach(
+            function (target) {
+                window.setTimeout(
+                    function () {
+                       styleElements(target, sizeBindings[target]);
+                    }, parsetInt(sources[0])
+                );
+            }
+        )
+    }
+
+    function styleElements(target, cssRule){
+        console.log('timer event for : ' + target);
+    }
 
     function componentRule(cssRules, selector, target, sources, keyword) {
         //make multiple registrations possible
@@ -645,6 +669,11 @@
 
 
     function loadContent(url, elm, level) {
+        // resolve url from any attribute recursively
+        // example content:url(@attrUrl) , <elm attrUrl="http:// etc">  => url = http://etc
+        while(url.indexOf('@') === 0){
+            url = elm.getAttribute(url.substring(1));
+        }
         fetch(url).then(
             function (response) {
                 response.text().then(function (data) {
