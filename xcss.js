@@ -274,7 +274,7 @@
 
     //insertContent for any css role having a content property without before/after pseudo selector
     function insertContent(cssRules, selector, target, sources, keyword, parent, level) {
-        var url, matches;
+        var url, matches,urlAttr;
         var content = cssRules[selector].style.content || '';
 
         var targetElms = document.querySelectorAll(selector);
@@ -314,10 +314,10 @@
                         elm.insertedContent = expression;
                         if (url) {
                             if (url.indexOf('@') === 0) {
-                                url = elm.getAttribute(url.substring(1));
+                                urlAttr = elm.getAttribute(url.substring(1));
 
                             }
-                            loadContent(url, elm, level);
+                            loadContent(urlAttr, elm, level);
                         } else {
                             try {
                                 var html = eval(expression.slice(1, -1));
