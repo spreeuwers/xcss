@@ -849,14 +849,17 @@
                         }
                     );
 
-                    // load new content but not if the prev location also matched the targetedStates
+
                     if (content) {
                         console.log(prevMatch);
-                        if (matches = content.match(/^url\(['"]([^)]*)['"]\)$/)) {
-                            loadContent(matches[1], elm);
+                        //chrome parses the content with " around the url
+                        if (matches = content.match(/^url\("([^)]*)"\)$/)) {
+                            loadContent( eval(matches[1]), elm);
+                        //Edge does not add " signs around the urk
+                        } else if (matches = content.match(/^url\(([^)]*)\)$/)) {
+                            loadContent( eval(matches[1]),  elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
-                            var html = eval(matches[1]);
-                            setHtmlContent(elm, html);
+                            setHtmlContent(elm, eval( matches[1]) );
                         }
                     }
                 } else {
