@@ -291,40 +291,34 @@
 
             console.log('inserting content for: ' + selector);
 
-            if (matches = content.match(/^"url\('?([^)]*)'?\)"$/)) {
+            if (matches = content.match(/^url\(([^)]*)\)$/)) {
                 url = matches[1];
-            }
 
-            if (matches = content.match(/^'url\("?([^)]*)"?\)'$/)) {
-                url = matches[1];
-            }
-
-            if (matches = content.match(/^url\(['"]?([^)^'^"]*)['"]?\)$/)) {
-                url = matches[1];
-                //correct for chrome if not between quotes the style is invalid
-                if (cssRules[selector].style) {
-                    allCSSRules[selector].style.content = '';
+                if (matches = url.match(/^"(.*)"$/)){
+                    url = url.slice(1, -1);
                 }
-
+                if (matches = content.match(/^"(.*)"$/)){
+                    content = content.slice(1, -1);
+                }
+                allCSSRules[selector].style.content='';
             }
-            var expression = cssRules[selector].style.content;
+
+
             //for each element matching the rule insertContent
             [].slice.call(targetElms).forEach(
                 function (elm) {
-                    if (elm.insertedContent !== expression) {
-                        elm.insertedContent = expression;
+                    if (elm.insertedContent !== content) {
+                        elm.insertedContent = content;
                         if (url) {
-                            if (url.indexOf('@') === 0) {
-                                urlAttr = elm.getAttribute(url.substring(1));
+                            //elm.style.content='';
+                            loadContent( eval(url), elm, level);
 
-                            }
-                            loadContent(urlAttr, elm, level);
                         } else {
                             try {
-                                var html = eval(expression.slice(1, -1));
+                                var html = eval(content.slice(1, -1));
                                 setHtmlContent(elm, html, level)
                             } catch (e) {
-                                concole.error('Could not evaluate expression: ' + expression);
+                                console.error('Could not evaluate expression: ' + content);
                             }
                         }
                     }
