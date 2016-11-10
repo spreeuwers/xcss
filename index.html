@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640">
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen">
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Xcss by spreeuwers</title>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/spreeuwers/xcss">View on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Xcss</h1>
+            <h2>CSS Framework executable simple powerfull templating</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/spreeuwers/xcss/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/spreeuwers/xcss/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+
+      <span class="banner-fix"></span>
+
+
+      <section id="main_content">
+        <p>"# xcss"</p>
+
+<p>XCSS started as simple solution for inheriting css classes.
+It solved the problem of not having CSS variables by extending classes.</p>
+
+<p>Experimenting with the content property however I discovered a powerfull
+recursive templating solution that is very easy to use.</p>
+
+<p>With this library the following css construct is possible and works  </p>
+
+<p>div {
+  content:"<code>&lt;div&gt;&lt;/div&gt;</code>";
+}</p>
+
+<p>or </p>
+
+<p>div {
+  content:url(<code>mymage.html</code>);
+}</p>
+
+<p>It results in nested divs a 100 levels deep. FUN! </p>
+
+<p>XCSS also adds a ONCLICK and WHEN constructions that enables routing.
+Conditional css is applied when a certain hash state is reached. </p>
+
+<p>The css in the rule is applied only WHEN the hash of the url
+equals the name used un the WHEN construction.</p>
+
+<p>!Extend algorithm:</p>
+
+<p>This script iterates through all css rules and detects
+rules that have the extends keyword in their selector.</p>
+
+<p>A new rule is added for each rules having the extends keyword
+This rule contains the style definitions of the rule itself and the inherited styles.</p>
+
+<p>Because the script iterates recursively through the rules, transitive inheritance is also supported.
+It is possible to build css class hierarchies very easy.
+This saves a lot of less or sass work.</p>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/spreeuwers">spreeuwers</a> can be found on <a href="https://github.com/spreeuwers/xcss">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="https://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+
+    
+  </body>
+</html>
