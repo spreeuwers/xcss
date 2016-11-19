@@ -246,7 +246,7 @@
                         }
                     ).map(
                         function (x) {
-                            return x.replace(/"\$\d+"/g, (key)=> {
+                            return x.replace(/"\$\d+"/g, function(key) {
                                return '"' + strings[key.replace(/"/g,'')] + '"'
                             });
                         }
@@ -810,14 +810,14 @@
 
                     //replace var(--xx) with state param
                     [].slice.call(cssRules[selector].style, 0).forEach(
-                        (p)=> {
-                            let style = cssRules[selector].style[p];
-                            let matches = style.match(/var\(--([^\)]*)\)/);
+                        function(p) {
+                            var styleExpr = cssRules[selector].style[p];
+                            var matches = styleExpr.match(/var\(--([^\)]*)\)/);
                             if (matches) {
-                                let jsKey = p.replace(/(-\w)/, function (v) {
+                                var jsKey = p.replace(/(-\w)/, function (v) {
                                     return v.substring(1).toUpperCase();
                                 });
-                                let value = style.replace(/var\(--[^\)]*\)/, state[matches[1]]);
+                                var value = styleExpr.replace(/var\(--[^\)]*\)/, state[matches[1]]);
                                 elm.style[jsKey] = value;
                             }
                         }
@@ -905,14 +905,14 @@
 
             var matches = msg.match(/\[[^\]]+]/g) || [];
             //copy the specified (attribute) value into the hash param
-            matches.forEach((match) => {
+            matches.forEach(function (match) {
                 match = match.replace(/^\[/, '').replace(/\]$/, '');
                 attr = match.split('="');
                 key = attr[0];
                 val = attr[1];
                 if (val) {
-                    val = val.replace(/\${[^\}]*}/g, (m) => {
-                            let key = m.replace(/^\${/, '').replace(/}$/, '');
+                    val = val.replace(/\${[^\}]*}/g, function(m) {
+                            var key = m.replace(/^\${/, '').replace(/}$/, '');
                             return elm[key] || elm.getAttribute(key);
                         }
                     );
