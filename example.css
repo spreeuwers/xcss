@@ -1,3 +1,10 @@
+:root{
+    --mycolor:yellow;
+    --myAngle:45deg;
+}
+
+
+
 
 .clr-red {
     color: #FFDDDD;
@@ -5,6 +12,7 @@
 
 .bg-blue {
     background-color:#1133aa;
+
 }
 
 
@@ -40,22 +48,36 @@
 #btn10 ONCLICK > .alt_sub_state {/*toggle last state*/}
 #btn11 ONCLICK :empty [void="alert('hoi')"]  {} /*do some js function */
 
-#myrange ONCHANGE rotate[value] {}
+
 
 #mytext WHEN buttonclicked *{
-    background-color:yellow;
+    background-color:var(--mycolor);
 }
 
 #mycheck WHEN * buttonclicked *{
-    transform:rotate(45deg);
+    transform:rotate(var(--myAngle));
 
 }
+
 #dlg1 WHEN btn3clicked[data-value]{
     content:"'${data-value}'";
+    background-color: red;
 }
-#dlg1 WHEN rotate[transform="'rotate(${value}deg)'"] [background-color="'rgb(${value},0,${value})'" ] {
-    transform:rotate(270deg);
+
+
+#myrange ONCHANGE rotate[angle="`${value}deg`"][bgcolor="'rgb(${value},0,${value})'" ] {}
+
+#dlg1{
+    --angle:45deg;
+    --bgcolor:#FFFFFF;
 }
+
+#dlg1 WHEN rotate {
+    transform:rotate(var(--angle));
+    background-color:var(--bgcolor);
+}
+
+
 
 #angle WHEN rotate[value]{
     content:'${value}'

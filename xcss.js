@@ -71,7 +71,7 @@
                 parms.forEach(function (parm) {
                     var keyVal = parm.split('=');
                     var key = keyVal[0];
-                    var val = keyVal[1];
+                    var val = decodeURIComponent(keyVal[1]);
                     result[path][key] = val;
 
                 });
@@ -246,7 +246,9 @@
                         }
                     ).map(
                         function (x) {
-                            return x.replace(/"\$(\d+)"/g, '"' + strings['$1'] + '"');
+                            return x.replace(/"\$\d+"/g, (key)=> {
+                               return '"' + strings[key.replace(/"/g,'')] + '"'
+                            });
                         }
                     );
 
@@ -275,7 +277,7 @@
 
     //insertContent for any css role having a content property without before/after pseudo selector
     function insertContent(cssRules, selector, target, sources, keyword, parent, level) {
-        var url, matches,urlAttr;
+        var url, matches, urlAttr;
         var content = cssRules[selector].style.content || '';
 
         var targetElms = document.querySelectorAll(selector);
@@ -294,13 +296,13 @@
             if (matches = content.match(/^url\(([^)]*)\)$/)) {
                 url = matches[1];
 
-                if (matches = url.match(/^"(.*)"$/)){
+                if (matches = url.match(/^"(.*)"$/)) {
                     url = url.slice(1, -1);
                 }
-                if (matches = content.match(/^"(.*)"$/)){
+                if (matches = content.match(/^"(.*)"$/)) {
                     content = content.slice(1, -1);
                 }
-                allCSSRules[selector].style.content='';
+                allCSSRules[selector].style.content = '';
             }
 
 
@@ -311,7 +313,7 @@
                         elm.insertedContent = content;
                         if (url) {
                             //elm.style.content='';
-                            loadContent( eval(url), elm, level);
+                            loadContent(eval(url), elm, level);
 
                         } else {
                             try {
@@ -475,14 +477,14 @@
             function (target) {
                 window.setTimeout(
                     function () {
-                       styleElements(target, sizeBindings[target]);
+                        styleElements(target, sizeBindings[target]);
                     }, parsetInt(sources[0])
                 );
             }
         )
     }
 
-    function styleElements(target, cssRule){
+    function styleElements(target, cssRule) {
         console.log('timer event for : ' + target);
     }
 
@@ -665,7 +667,7 @@
     function loadContent(url, elm, level) {
         // resolve url from any attribute recursively
         // example content:url(@attrUrl) , <elm attrUrl="http:// etc">  => url = http://etc
-        while(url.indexOf('@') === 0){
+        while (url.indexOf('@') === 0) {
             url = elm.getAttribute(url.substring(1));
         }
         fetch(url).then(
@@ -806,6 +808,21 @@
                         return state[v.substring(2, v.length - 1)];
                     });
 
+                    //replace var(--xx) with state param
+                    [].slice.call(cssRules[selector].style, 0).forEach(
+                        (p)=> {
+                            let style = cssRules[selector].style[p];
+                            let matches = style.match(/var\(--([^\)]*)\)/);
+                            if (matches) {
+                                let jsKey = p.replace(/(-\w)/, function (v) {
+                                    return v.substring(1).toUpperCase();
+                                });
+                                let value = style.replace(/var\(--[^\)]*\)/, state[matches[1]]);
+                                elm.style[jsKey] = value;
+                            }
+                        }
+                    );
+
 
                     //then overwrite the defined style properties  with a templated  value
                     parms.forEach(
@@ -848,12 +865,12 @@
                         console.log(prevMatch);
                         //chrome parses the content with " around the url
                         if (matches = content.match(/^url\("([^)]*)"\)$/)) {
-                            loadContent( eval(matches[1]), elm);
-                        //Edge does not add " signs around the urk
+                            loadContent(eval(matches[1]), elm);
+                            //Edge does not add " signs around the urk
                         } else if (matches = content.match(/^url\(([^)]*)\)$/)) {
-                            loadContent( eval(matches[1]),  elm);
+                            loadContent(eval(matches[1]), elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
-                            setHtmlContent(elm, eval( matches[1]) );
+                            setHtmlContent(elm, eval(matches[1]));
                         }
                     }
                 } else {
@@ -883,19 +900,25 @@
             var parms = '';
             var prefix = '?';
             var key, val, attr;
-            var match = msg.match(/\[([^\]]+)]$/);
+            //var match = msg.match(/\[([^\]]+)]$/);
             var elm = elmEvent.currentTarget || elmEvent.srcElement;
 
-
+            var matches = msg.match(/\[[^\]]+]/g) || [];
             //copy the specified (attribute) value into the hash param
-            if (match && match[1] !== undefined) {
-                attr = match[1].split('="');
+            matches.forEach((match) => {
+                match = match.replace(/^\[/, '').replace(/\]$/, '');
+                attr = match.split('="');
                 key = attr[0];
                 val = attr[1];
                 if (val) {
+                    val = val.replace(/\${[^\}]*}/g, (m) => {
+                            let key = m.replace(/^\${/, '').replace(/}$/, '');
+                            return elm[key] || elm.getAttribute(key);
+                        }
+                    );
                     [].slice.call(elm.attributes, 0).forEach(
                         function (attr) {
-                            val = val.replace('${' + attr.name + '}', attr.value);
+                            val = val.replace('@{' + attr.name + '}', attr.value);
 
                         }
                     );
@@ -904,9 +927,10 @@
                     val = elm[key] || elm.getAttribute(key);
                 }
 
-                parms = prefix + key + '=' + encodeURIComponent(val);
+                parms += prefix + key + '=' + encodeURIComponent(val);
+                prefix = '&';
 
-            }
+            });
 
             var parts = location.hash.replace(/^#/, '').split('/').map(function (p) {
                 return p.split('?')[0]
