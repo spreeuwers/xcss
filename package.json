@@ -1,0 +1,35 @@
+{
+  "name": "xcss",
+  "version": "0.1.0",
+  "description": "\"# xcss\"",
+  "main": "xcss.js",
+  "scripts": {
+    "test": "test",
+    "dev": "lite-server",
+    "start": "lite-server",
+    "build": "uglifyjs -o ./dist/xcss.min.js --source-map ./dist/xcss.map --compress --mangle -- xcss.js",
+    "pack": "uglifyjs -o ./dist/xcss.min.js --compress -- xcss.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spreeuwers/xcss.git"
+  },
+  "keywords": [
+    "css",
+    "based",
+    "web",
+    "framework"
+  ],
+  "author": "eddy spreeuwers",
+  "license": "none",
+  "bugs": {
+    "url": "https://github.com/spreeuwers/xcss/issues"
+  },
+  "dependencies": {
+    "liteserver": "^0.3.0",
+    "webpack": "^1.13.1"
+  },
+  "devDependencies": {
+    "uglify": "^0.1.5"
+  }
+}

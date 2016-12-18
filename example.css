@@ -65,7 +65,7 @@
 }
 
 
-#myrange ONCHANGE rotate[angle="`${value}deg`"][bgcolor="'rgb(${value},0,${value})'" ] {}
+#myrange ONCHANGE rotate[angle="`${value}deg`"][bgcolor="`rgb(${value},0,${value})`" ] {}
 
 #dlg1{
     --angle:45deg;
@@ -91,8 +91,8 @@ nav>ul li{
     padding:3px;
 }
 
-main>article WHEN navigeer * [link]{
-    content:url(`${link}.html`);
+main>article WHEN navigeer * [link][test="'${link}'"]{
+    content:url(`${test}.html`);
     background-color: green;
 }
 

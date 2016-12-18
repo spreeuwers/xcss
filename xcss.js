@@ -759,6 +759,7 @@
 
         function stateChangeListener(newState) {
             var matches, parms;
+            var url;
             var jsKey, cssKey;
             var value;
             var placeholder;
@@ -797,6 +798,39 @@
 
                 if (match) {
                     parms = match.params;
+
+
+                    //calculate templated values and expressions and store them in the state
+                    parms.forEach(
+                        function (parm) {
+                            var parts = parm.split('=');
+                            //simple case : /path[propertyname] just replace content with value
+                            if (parts.length === 1 && content) {
+                                placeholder = new RegExp('\\$\\{' + parm + '\\}', 'g');
+                                replacer = (state || {})[parm] || '';
+                                content = content.replace(placeholder, replacer);
+                                return;
+                            }
+
+                            cssKey = parts.shift();
+                            //convert css dash syntax into js syntax example background-color - > backgroundColor
+                            jsKey = cssKey.replace(/(-\w)/, function (v) {
+                                return v.substring(1).toUpperCase();
+                            });
+
+                            //reconstruct right side of the = sign
+                            value = parts.join('=').replace(/^"/, '').replace(/"$/, '');
+                            if (value) {
+                                //replace template variables
+                                value = value.replace(/\$\{[^\}]*\}/g, function (v) {
+                                    return state[v.substring(2, v.length - 1)];
+                                });
+                                state[jsKey] = eval(value||'') || '';
+                            }
+                        }
+                    );
+
+
                     //filter content property out before adding the cssText
                     //because an inline style does not behave well having a content property
                     cssText = cssRules[selector].style.cssText.split('; ').filter(
@@ -824,53 +858,21 @@
                     );
 
 
-                    //then overwrite the defined style properties  with a templated  value
-                    parms.forEach(
-                        function (parm) {
-                            var parts = parm.split('=');
-                            //simple case : /path[propertyname] just replace content with value
-                            if (parts.length === 1 && content) {
-                                placeholder = new RegExp('\\$\\{' + parm + '\\}', 'g');
-                                replacer = (state || {})[parms] || '';
-                                content = content.replace(placeholder, replacer);
-                                return;
-                            }
-
-                            cssKey = parts.shift();
-                            //convert css dash syntax into js syntax example background-color - > backgroundColor
-                            jsKey = cssKey.replace(/(-\w)/, function (v) {
-                                return v.substring(1).toUpperCase();
-                            });
-
-                            //reconstruct right side of the = sign
-                            value = parts.join('=').replace(/^"/, '').replace(/"$/, '');
-                            if (value) {
-                                //replace template variables
-                                value = value.replace(/\$\{[^\}]*\}/g, function (v) {
-                                    return state[v.substring(2, v.length - 1)];
-                                });
-                                state[jsKey] = eval(value) || '';
-                                //if there is no property key like jsKey warn the programmer
-                                if (elm.style[jsKey] === undefined) {
-                                    console.warn('Trying to set a style key:' + cssKey + ' that does not exist!');
-                                } else {
-                                    elm.style[jsKey] = eval(value);
-                                }
-                            }
-                        }
-                    );
 
 
                     if (content) {
                         console.log(prevMatch);
                         //chrome parses the content with " around the url
                         if (matches = content.match(/^url\("([^)]*)"\)$/)) {
-                            loadContent(eval(matches[1]), elm);
+                            url = evaluate(matches[1],state);
+                            loadContent(url, elm);
                             //Edge does not add " signs around the urk
                         } else if (matches = content.match(/^url\(([^)]*)\)$/)) {
-                            loadContent(eval(matches[1]), elm);
+                             url = evaluate(matches[1],state);
+                            loadContent(url, elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
-                            setHtmlContent(elm, eval(matches[1]));
+                            var html = evaluate(matches[1],state);
+                            setHtmlContent(elm, html);
                         }
                     }
                 } else {
@@ -887,6 +889,13 @@
 
         }
 
+    }
+
+    function evaluate(text,env){
+        var result = text.replace(/\$\{[^\}]*\}/g, function (v) {
+            return env[v.substring(2, v.length - 1)];
+        });
+        return eval(result);
     }
 
 
@@ -922,7 +931,13 @@
 
                         }
                     );
-                    val = eval(val.replace(/^"/, '').replace(/"$/, ''));
+                    try{
+                        val = eval(val.replace(/^"/, '').replace(/"$/, ''));
+                    } catch(e){
+                        val = val.replace(/^"/, '').replace(/"$/, '');
+                        console.log('eval to literal value as string')
+                    }
+
                 } else {
                     val = elm[key] || elm.getAttribute(key);
                 }
