@@ -246,8 +246,8 @@
                         }
                     ).map(
                         function (x) {
-                            return x.replace(/"\$\d+"/g, function(key) {
-                               return '"' + strings[key.replace(/"/g,'')] + '"'
+                            return x.replace(/"\$\d+"/g, function (key) {
+                                return '"' + strings[key.replace(/"/g, '')] + '"'
                             });
                         }
                     );
@@ -825,7 +825,7 @@
                                 value = value.replace(/\$\{[^\}]*\}/g, function (v) {
                                     return state[v.substring(2, v.length - 1)];
                                 });
-                                state[jsKey] = eval(value||'') || '';
+                                state[jsKey] = eval(value || '') || '';
                             }
                         }
                     );
@@ -844,34 +844,43 @@
 
                     //replace var(--xx) with state param
                     [].slice.call(cssRules[selector].style, 0).forEach(
-                        function(p) {
+                        function (p) {
                             var styleExpr = cssRules[selector].style[p];
                             var matches = styleExpr.match(/var\(--([^\)]*)\)/);
-                            if (matches) {
+                            if (matches && matches[1] && state[matches[1]] ) {
                                 var jsKey = p.replace(/(-\w)/, function (v) {
                                     return v.substring(1).toUpperCase();
                                 });
-                                var value = styleExpr.replace(/var\(--[^\)]*\)/, state[matches[1]]);
+
+                                if (typeof state[matches[1]].then === 'function') {
+                                    state[matches[1]].then(r => {
+                                        setStyle(jsKey, r);
+                                    });
+                                } else {
+                                    setStyle(jsKey, state[matches[1]]);
+                                }
+                            }
+
+                            function setStyle(jsKey, value) {
+                                var value = styleExpr.replace(/var\(--[^\)]*\)/, value);
                                 elm.style[jsKey] = value;
                             }
                         }
                     );
 
 
-
-
                     if (content) {
                         console.log(prevMatch);
                         //chrome parses the content with " around the url
                         if (matches = content.match(/^url\("([^)]*)"\)$/)) {
-                            url = evaluate(matches[1],state);
+                            url = evaluate(matches[1], state);
                             loadContent(url, elm);
                             //Edge does not add " signs around the urk
                         } else if (matches = content.match(/^url\(([^)]*)\)$/)) {
-                             url = evaluate(matches[1],state);
+                            url = evaluate(matches[1], state);
                             loadContent(url, elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
-                            var html = evaluate(matches[1],state);
+                            var html = evaluate(matches[1], state);
                             setHtmlContent(elm, html);
                         }
                     }
@@ -891,7 +900,7 @@
 
     }
 
-    function evaluate(text,env){
+    function evaluate(text, env) {
         var result = text.replace(/\$\{[^\}]*\}/g, function (v) {
             return env[v.substring(2, v.length - 1)];
         });
@@ -920,7 +929,7 @@
                 key = attr[0];
                 val = attr[1];
                 if (val) {
-                    val = val.replace(/\${[^\}]*}/g, function(m) {
+                    val = val.replace(/\${[^\}]*}/g, function (m) {
                             var key = m.replace(/^\${/, '').replace(/}$/, '');
                             return elm[key] || elm.getAttribute(key);
                         }
@@ -931,9 +940,9 @@
 
                         }
                     );
-                    try{
+                    try {
                         val = eval(val.replace(/^"/, '').replace(/"$/, ''));
-                    } catch(e){
+                    } catch (e) {
                         val = val.replace(/^"/, '').replace(/"$/, '');
                         console.log('eval to literal value as string')
                     }

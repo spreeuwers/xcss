@@ -91,9 +91,9 @@ nav>ul li{
     padding:3px;
 }
 
-main>article WHEN navigeer * [link][test="'${link}'"]{
+main>article WHEN navigeer * [link][test="'${link}'"] [bgcolor="new Promise( function(res, rej) { window.setTimeout( ()=>res('red'), 2000); }) "] {
     content:url(`${test}.html`);
-    background-color: green;
+    background-color: var(--bgcolor);
 }
 
 main>article {
