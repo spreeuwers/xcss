@@ -853,7 +853,7 @@
                                 });
 
                                 if (typeof state[matches[1]].then === 'function') {
-                                    state[matches[1]].then(r => {
+                                    state[matches[1]].then(function(r) {
                                         setStyle(jsKey, r);
                                     });
                                 } else {
