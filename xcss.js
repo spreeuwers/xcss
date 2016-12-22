@@ -764,6 +764,8 @@
             var value;
             var placeholder;
             var replacer;
+            var VAR_EXPR = /var\(--([^\)]*)\)/;
+
             console.log('event received: ' + targetKey, 'evt:', newState);
             var path = newState.path;
             var state = newState.params;
@@ -846,23 +848,29 @@
                     [].slice.call(cssRules[selector].style, 0).forEach(
                         function (p) {
                             var styleExpr = cssRules[selector].style[p];
-                            var matches = styleExpr.match(/var\(--([^\)]*)\)/);
-                            if (matches && matches[1] && state[matches[1]] ) {
-                                var jsKey = p.replace(/(-\w)/, function (v) {
-                                    return v.substring(1).toUpperCase();
-                                });
-
-                                if (typeof state[matches[1]].then === 'function') {
-                                    state[matches[1]].then(function(r) {
-                                        setStyle(jsKey, r);
+                            var matches = styleExpr.match(VAR_EXPR);
+                            if (matches && matches[1]  ) {
+                                var variables = matches[1].split(',');
+                                var match1 = variables.shift();
+                                var state1 = state[match1] || variables[0];
+                                if (state1){
+                                    var jsKey = p.replace(/(-\w)/, function (v) {
+                                        return v.substring(1).toUpperCase();
                                     });
-                                } else {
-                                    setStyle(jsKey, state[matches[1]]);
+
+                                    if (typeof state1.then === 'function') {
+                                        state1.then(function(r) {
+                                            setStyle(jsKey, r || variables[0]);
+                                        });
+                                    } else {
+                                        setStyle(jsKey, state1);
+                                    }
                                 }
+
                             }
 
                             function setStyle(jsKey, value) {
-                                var value = styleExpr.replace(/var\(--[^\)]*\)/, value);
+                                var value = styleExpr.replace(VAR_EXPR, value);
                                 elm.style[jsKey] = value;
                             }
                         }
