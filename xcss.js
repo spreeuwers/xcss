@@ -490,7 +490,6 @@
 
     function componentRule(cssRules, selector, target, sources, keyword) {
         //make multiple registrations possible
-        var registered = {};
         var key;
         var proto = Object.create(HTMLElement.prototype);
 
@@ -860,6 +859,7 @@
 
                                     if (typeof state1.then === 'function') {
                                         state1.then(function(r) {
+
                                             setStyle(jsKey, r || variables[0]);
                                         });
                                     } else {
@@ -1041,8 +1041,7 @@
     }
 
     function addNewStylesheet() {
-        var styleEl = document.createElement('style'),
-            styleSheet;
+        var styleEl = document.createElement('style');
 
         // Append style element to head
         document.head.appendChild(styleEl);
