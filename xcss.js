@@ -1,5 +1,5 @@
 /*global console,fetch*/
-(function xcss() {
+(function xcss(_evaluate) {
 
     "use strict";
     var MAX_NESTING_LEVEL = 100;
@@ -313,11 +313,11 @@
                         elm.insertedContent = content;
                         if (url) {
                             //elm.style.content='';
-                            loadContent(eval(url), elm, level);
+                            loadContent(_evaluate(url), elm, level);
 
                         } else {
                             try {
-                                var html = eval(content.slice(1, -1));
+                                var html = _evaluate(content.slice(1, -1));
                                 setHtmlContent(elm, html, level)
                             } catch (e) {
                                 console.error('Could not evaluate expression: ' + content);
@@ -382,23 +382,27 @@
 
                         var condition = cssRule.selectorText.substring(pos + 6);
                         var result = false;
-                        var matches = condition.match(/(width|height)\[([^=]*)="(.*)"\]/);
+                        var matches = condition.match(/(widthFor|heightFor)\[([^=]*)="(.*)"\]/);
                         if (matches) {
                             var tekst = matches[3];
                             var div = document.createElement('div');
                             div.style.cssText = "position='absolute';width:auto;height:auto;white-space: nowrap;display:inline-block";
                             div.innerHTML = tekst;
                             elm.appendChild(div);
-                            width[tekst] = div.offsetWidth;
-                            height[tekst] = div.offsetHeight;
+                            elm.width=elm.offsetWidth;
+                            elm.height=elm.offsetHeight;
+                            elm.widthFor={};
+                            elm.heightFor={};
+                            elm.widthFor[tekst] = div.offsetWidth;
+                            elm.heightFor[tekst] = div.offsetHeight;
                             elm.removeChild(div);
 
                         }
                         try {
 
-                            result = eval(condition);
+                            result = _evaluate(condition, elm, width);
                         } catch (e) {
-                            console.error('invalid SIZE condition!' + condition + ', error: ' + e);
+                            console.error('invalid SIZE condition! ' + condition + ', error: ' + e);
                         }
 
                         if (!result) {
@@ -408,11 +412,11 @@
 
                         elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
                             var expr = v.substring(2, v.length - 1);
-                            return eval(expr);
+                            return _evaluate(expr);
                         });
 
                         if (content) {
-                            var html = '' + eval(content.slice(1, -1));
+                            var html = '' + _evaluate(content.slice(1, -1));
                             setHtmlContent(elm, html);
                         }
 
@@ -828,7 +832,7 @@
                                 });
                                 value = value.replace(/\\'/g, "'"); //firefox escape quotes in attributes
                                 try {
-                                    state[cssKey] = eval(value) || '';
+                                    state[cssKey] = _evaluate(value) || '';
                                 } catch (e){
                                     console.error ('could not evaluate', value);
                                 }
@@ -917,7 +921,12 @@
         var result = text.replace(/\$\{[^\}]*\}/g, function (v) {
             return env[v.substring(2, v.length - 1)];
         });
-        return eval(result);
+        try {
+            return _evaluate(result);
+        }  catch(e){
+            console.error(e);
+        }
+
     }
 
 
@@ -954,7 +963,7 @@
                         }
                     );
                     try {
-                        val = eval(val.replace(/^"/, '').replace(/"$/, ''));
+                        val = _evaluate(val.replace(/^"/, '').replace(/"$/, ''));
                     } catch (e) {
                         val = val.replace(/^"/, '').replace(/"$/, '');
                         console.log('eval to literal value as string')
@@ -1056,4 +1065,4 @@
     }
 
 
-})();
+})( function _evaluate(expr,elm, env){return eval(expr);} );

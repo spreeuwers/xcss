@@ -39,6 +39,7 @@
 
 #btn1 ONCLICK + buttonclicked {}  /*add substate */
 #btn2 ONCLICK ~ buttonclicked {}  /*delete substate*/
+#btn2 ONCLICK -buttonclicked {}  /*delete state*/
 #btn3 ONCLICK   btn3clicked[data-value] {}
 #btn4 ONCLICK   load[data-value] {}
 #btn5 ONCLICK > alt_sub_state {}
@@ -91,8 +92,8 @@ nav>ul li{
     padding:3px;
 }
 
-main>article WHEN navigeer * [link][test="'${link}'"] [bgcolor="new Promise( function(res, rej) { window.setTimeout( function(){ res('blue');}, 2000); }) "] {
-    content:url(`${test}.html`);
+main>article WHEN navigeer * [link][test="'${link}'"] [bgcolor="new Promise( function(res, rej) { window.setTimeout( function(){ res('blue');console.log(cssKey);}, 2000); }) "] {
+    content:url(`${link}.html`);
     background-color: var(--bgcolor,pink);
 }
 
@@ -139,12 +140,12 @@ div[sizing]{
     overflow-x: hidden;
 }
 
-div[sizing] SIZE  elm.offsetWidth > width[text="A long text demonstrating the SIZE keyword"]  {
+div[sizing] SIZE  elm.width > elm.widthFor[text="A long text demonstrating the SIZE keyword"]  {
   content:"`A long text demonstrating the SIZE keyword`";
 
 }
 
-div[sizing] SIZE  elm.scrollWidth > elm.offsetWidth  {
+div[sizing] SIZE  elm.scrollWidth > elm.width  {
   content:"`Short text`";
 
 }
