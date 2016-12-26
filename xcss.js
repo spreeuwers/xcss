@@ -536,9 +536,12 @@
                 root.innerHTML = comp.content;
             }
         }
-        document.registerElement(target, {
-            prototype: proto
-        });
+        if (document.registerElement) {
+
+            document.registerElement(target, {
+                prototype: proto
+            });
+        }
         var self = cssRules[selector];
         styleSheet.insertRule(target + '{' + self.style.cssText + '}', styleSheet.cssRules.length);
 
@@ -814,19 +817,21 @@
                             }
 
                             cssKey = parts.shift();
-                            //convert css dash syntax into js syntax example background-color - > backgroundColor
-                            jsKey = cssKey.replace(/(-\w)/, function (v) {
-                                return v.substring(1).toUpperCase();
-                            });
 
                             //reconstruct right side of the = sign
-                            value = parts.join('=').replace(/^"/, '').replace(/"$/, '');
+                            value = parts.join('=').replace(/^"/, '').replace(/"$/, '');       //Edge escape quotes in attributes
+                            value = value.replace(/^\\'/, "'").replace(/\\'$/, "'"); //firefox escape quotes in attributes
                             if (value) {
                                 //replace template variables
                                 value = value.replace(/\$\{[^\}]*\}/g, function (v) {
                                     return state[v.substring(2, v.length - 1)];
                                 });
-                                state[jsKey] = eval(value || '') || '';
+                                value = value.replace(/\\'/g, "'"); //firefox escape quotes in attributes
+                                try {
+                                    state[cssKey] = eval(value) || '';
+                                } catch (e){
+                                    console.error ('could not evaluate', value);
+                                }
                             }
                         }
                     );
@@ -848,17 +853,17 @@
                         function (p) {
                             var styleExpr = cssRules[selector].style[p];
                             var matches = styleExpr.match(VAR_EXPR);
-                            if (matches && matches[1]  ) {
+                            if (matches && matches[1]) {
                                 var variables = matches[1].split(',');
                                 var match1 = variables.shift();
                                 var state1 = state[match1] || variables[0];
-                                if (state1){
+                                if (state1) {
                                     var jsKey = p.replace(/(-\w)/, function (v) {
                                         return v.substring(1).toUpperCase();
                                     });
 
                                     if (typeof state1.then === 'function') {
-                                        state1.then(function(r) {
+                                        state1.then(function (r) {
 
                                             setStyle(jsKey, r || variables[0]);
                                         });
