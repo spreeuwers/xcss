@@ -981,7 +981,7 @@
             var parts = location.hash.replace(/^#/, '').split('/').map(function (p) {
                 return p.split('?')[0]
             });
-            var path = hash.replace(/^[#>+~\.\/]/, '').trim();
+            var path = hash.replace(/^[#>+~\.\/-]/, '').trim();
             var pathPos = parts.indexOf(path);
             var prevHash = location.hash.replace(/^#/, '').split('/');
 
@@ -993,6 +993,14 @@
                 prevHash.push(path);
                 location.hash = prevHash.join('/') + parms;
 
+            } else if (hash.indexOf('-') === 0) {
+                //delete state name from path
+                if (path === '*') {
+                    pathPos = prevHash.length - 1;
+                }
+                if (parts[parts.length-1] === path) {
+                    location.hash = prevHash.slice(0,prevHash.length -2).join('/');
+                }
             } else if (hash.indexOf('~') === 0) {
                 //delete state name from path
                 if (path === '*') {

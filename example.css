@@ -39,7 +39,7 @@
 
 #btn1 ONCLICK + buttonclicked {}  /*add substate */
 #btn2 ONCLICK ~ buttonclicked {}  /*delete substate*/
-#btn2 ONCLICK -buttonclicked {}  /*delete state*/
+#btn2a ONCLICK -buttonclicked {}  /*delete state*/
 #btn3 ONCLICK   btn3clicked[data-value] {}
 #btn4 ONCLICK   load[data-value] {}
 #btn5 ONCLICK > alt_sub_state {}
