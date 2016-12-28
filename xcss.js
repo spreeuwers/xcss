@@ -13,12 +13,12 @@
     var sizeBindings = {};
     var timerBindings = {};
     var stateListeners = [];
-    var WHEN = 'when';
-    var AND = 'and';
-    var EXTENDS = 'extends';
-    var APPLIES = 'applies';
+    // var WHEN = 'when';
+    // var AND = 'and';
+    // var EXTENDS = 'extends';
+    // var APPLIES = 'applies';
     var EVENTS = [];
-    var LOGICAL = 'LOGICAL';
+    // var LOGICAL = 'LOGICAL';
     var prevState = {};
 
     var KEYWORD_FUNCTIONS = {
@@ -29,7 +29,8 @@
         PULL: alignRule,
         SIZE: sizeRule,
         AND: LogicKeyword,
-        OR: LogicKeyword
+        OR: LogicKeyword,
+        TIMER:timerRule
     };
 
     //fetch all possible events
@@ -277,7 +278,7 @@
 
     //insertContent for any css role having a content property without before/after pseudo selector
     function insertContent(cssRules, selector, target, sources, keyword, parent, level) {
-        var url, matches, urlAttr;
+        var url, matches;
         var content = cssRules[selector].style.content || '';
 
         var targetElms = document.querySelectorAll(selector);
@@ -378,7 +379,6 @@
                     function (elm) {
 
                         var pos = cssRule.selectorText.toUpperCase().indexOf(' SIZE ');
-                        var text, width = {}, height = {};
 
                         var condition = cssRule.selectorText.substring(pos + 6);
                         var result = false;
@@ -400,7 +400,7 @@
                         }
                         try {
 
-                            result = _evaluate(condition, elm, width);
+                            result = _evaluate(condition, elm);
                         } catch (e) {
                             console.error('invalid SIZE condition! ' + condition + ', error: ' + e);
                         }
@@ -766,7 +766,7 @@
         function stateChangeListener(newState) {
             var matches, parms;
             var url;
-            var jsKey, cssKey;
+            var cssKey;
             var value;
             var placeholder;
             var replacer;
