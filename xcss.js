@@ -314,11 +314,11 @@
                         elm.insertedContent = content;
                         if (url) {
                             //elm.style.content='';
-                            loadContent(_evaluate(url), elm, level);
+                            loadContent(_evaluate(url, elm), elm, level);
 
                         } else {
                             try {
-                                var html = _evaluate(content.slice(1, -1));
+                                var html = _evaluate(content.slice(1, -1), elm);
                                 setHtmlContent(elm, html, level)
                             } catch (e) {
                                 console.error('Could not evaluate expression: ' + content);
@@ -412,11 +412,11 @@
 
                         elm.style.cssText = cssText.replace(/\$\{[^\}]*\}/g, function (v) {
                             var expr = v.substring(2, v.length - 1);
-                            return _evaluate(expr);
+                            return _evaluate(expr, elm);
                         });
 
                         if (content) {
-                            var html = '' + _evaluate(content.slice(1, -1));
+                            var html = '' + _evaluate(content.slice(1, -1), elm);
                             setHtmlContent(elm, html);
                         }
 
@@ -832,7 +832,7 @@
                                 });
                                 value = value.replace(/\\'/g, "'"); //firefox escape quotes in attributes
                                 try {
-                                    state[cssKey] = _evaluate(value) || '';
+                                    state[cssKey] = _evaluate(value, elm) || '';
                                 } catch (e){
                                     console.error ('could not evaluate', value);
                                 }
@@ -890,14 +890,14 @@
                         console.log(prevMatch);
                         //chrome parses the content with " around the url
                         if (matches = content.match(/^url\("([^)]*)"\)$/)) {
-                            url = evaluate(matches[1], state);
+                            url = evaluate(matches[1], state, elm);
                             loadContent(url, elm);
                             //Edge does not add " signs around the urk
                         } else if (matches = content.match(/^url\(([^)]*)\)$/)) {
-                            url = evaluate(matches[1], state);
+                            url = evaluate(matches[1], state, elm);
                             loadContent(url, elm);
                         } else if (matches = content.match(/^"([^"]*)"$/)) {
-                            var html = evaluate(matches[1], state);
+                            var html = evaluate(matches[1], state, elm);
                             setHtmlContent(elm, html);
                         }
                     }
@@ -917,12 +917,12 @@
 
     }
 
-    function evaluate(text, env) {
+    function evaluate(text, env, elm) {
         var result = text.replace(/\$\{[^\}]*\}/g, function (v) {
             return env[v.substring(2, v.length - 1)];
         });
         try {
-            return _evaluate(result);
+            return _evaluate(result, elm);
         }  catch(e){
             console.error(e);
         }
@@ -963,7 +963,7 @@
                         }
                     );
                     try {
-                        val = _evaluate(val.replace(/^"/, '').replace(/"$/, ''));
+                        val = _evaluate(val.replace(/^"/, '').replace(/"$/, ''), elm);
                     } catch (e) {
                         val = val.replace(/^"/, '').replace(/"$/, '');
                         console.log('eval to literal value as string')
@@ -1073,4 +1073,4 @@
     }
 
 
-})( function _evaluate(expr,elm, env){return eval(expr);} );
+})( function _evaluate(expr, elm, self){ return eval( expr); } );
