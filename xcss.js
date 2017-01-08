@@ -30,7 +30,7 @@
         SIZE: sizeRule,
         AND: LogicKeyword,
         OR: LogicKeyword,
-        TIMER:timerRule
+        TIMER: timerRule
     };
 
     //fetch all possible events
@@ -294,7 +294,7 @@
 
             console.log('inserting content for: ' + selector);
 
-            if (matches = content.match(/^url\(([^)]*)\)$/)) {
+            if (matches = content.match(/^"?url\(([^)]*)\)"?$/)) {
                 url = matches[1];
 
                 if (matches = url.match(/^"(.*)"$/)) {
@@ -314,6 +314,9 @@
                         elm.insertedContent = content;
                         if (url) {
                             //elm.style.content='';
+                            if (/^@/.test(url)) {
+                                url = "'" + url + "'";
+                            }
                             loadContent(_evaluate(url, elm), elm, level);
 
                         } else {
@@ -389,10 +392,10 @@
                             div.style.cssText = "position='absolute';width:auto;height:auto;white-space: nowrap;display:inline-block";
                             div.innerHTML = tekst;
                             elm.appendChild(div);
-                            elm.width=elm.offsetWidth;
-                            elm.height=elm.offsetHeight;
-                            elm.widthFor={};
-                            elm.heightFor={};
+                            elm.width = elm.offsetWidth;
+                            elm.height = elm.offsetHeight;
+                            elm.widthFor = {};
+                            elm.heightFor = {};
                             elm.widthFor[tekst] = div.offsetWidth;
                             elm.heightFor[tekst] = div.offsetHeight;
                             elm.removeChild(div);
@@ -833,8 +836,8 @@
                                 value = value.replace(/\\'/g, "'"); //firefox escape quotes in attributes
                                 try {
                                     state[cssKey] = _evaluate(value, elm) || '';
-                                } catch (e){
-                                    console.error ('could not evaluate', value);
+                                } catch (e) {
+                                    console.error('could not evaluate', value);
                                 }
                             }
                         }
@@ -923,7 +926,7 @@
         });
         try {
             return _evaluate(result, elm);
-        }  catch(e){
+        } catch (e) {
             console.error(e);
         }
 
@@ -998,8 +1001,8 @@
                 if (path === '*') {
                     pathPos = prevHash.length - 1;
                 }
-                if (parts[parts.length-1] === path) {
-                    location.hash = prevHash.slice(0,prevHash.length -2).join('/');
+                if (parts[parts.length - 1] === path) {
+                    location.hash = prevHash.slice(0, prevHash.length - 2).join('/');
                 }
             } else if (hash.indexOf('~') === 0) {
                 //delete state name from path
@@ -1073,4 +1076,6 @@
     }
 
 
-})( function _evaluate(expr, elm, self){ return eval( expr); } );
+})(function _evaluate(expr, elm, self) {
+    return eval(expr);
+});
