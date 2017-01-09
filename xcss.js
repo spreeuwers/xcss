@@ -650,7 +650,7 @@
         var targetElms = document.querySelectorAll(target);
         [].slice.call(targetElms).forEach(
             function (elm) {
-                console.log('adding eventlistener for ' + newHash);
+                //console.log('adding eventlistener for ' + newHash);
                 if (newHash === 'prevent') {
                     elm.xcssHandler = function (evt) {
                         evt.preventDefault();
@@ -682,8 +682,6 @@
         fetch(url).then(
             function (response) {
                 response.text().then(function (data) {
-                    console.log(url);
-                    console.log(data);
                     if (url.indexOf('://') > 0 && SCRIPTEXPR.test(data) || EVENTEXPR.test(data)) {
                         console.error('unsafe content ignored!');
                     } else {
