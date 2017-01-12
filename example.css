@@ -150,5 +150,10 @@ div[sizing] SIZE  elm.scrollWidth > elm.width  {
 
 }
 
+form[name="register"] input,form[name="register"] textarea MODEL person{
+
+}
+
+
 
 

@@ -12,6 +12,7 @@
     var pullBindings = {};
     var sizeBindings = {};
     var timerBindings = {};
+    var modelBindings = {};
     var stateListeners = [];
     // var WHEN = 'when';
     // var AND = 'and';
@@ -30,7 +31,8 @@
         SIZE: sizeRule,
         AND: LogicKeyword,
         OR: LogicKeyword,
-        TIMER: timerRule
+        TIMER: timerRule,
+        MODEL: modelRule
     };
 
     //fetch all possible events
@@ -178,6 +180,54 @@
             }
         );
 
+    }
+
+    function bindAllModels(parent) {
+
+        function updateGUI(modelObj, modelExpr) {
+             var sameModels = document.querySelectorAll('[data-model="' + modelExpr + '"]');
+            [].slice.call(sameModels).forEach(
+                function (peer) {
+                    var name = peer.getAttribute('name') || '';
+                    peer.value = modelObj[name];
+                    peer.innerHTML = modelObj[name];
+                }
+            );
+        }
+
+        Object.keys(modelBindings).forEach(
+            function (target) {
+                var scope = parent || document;
+                var targetElms = scope.querySelectorAll(target) || [];
+                var sources = modelBindings[target] || [];
+                var parts = (sources[0]||'').split('[');
+                var modelExpr = parts.shift().trim();
+
+                //var initExpr= parts.shift().split('=');
+                //var variable = initExpr[0];
+                //var expression = initExpr[1];
+                [].slice.call(targetElms).forEach(
+                    function (elm) {
+                        if (elm.getAttribute('data-model') !== modelExpr) {
+                            //var value =_evaluate(expression, elm);
+                            var modelObj = _evaluate(modelExpr, elm);
+                            elm.setAttribute('data-model',modelExpr);
+                            //elm.value = modelObj[elm.name || ''];
+                            updateGUI(modelObj, modelExpr);
+                            elm.addEventListener('input', function () {
+                                modelObj[elm.name||''] = elm.value;
+                                updateGUI(modelObj, modelExpr);
+
+                            });
+                            console.log('bound model ', modelExpr, ' to ', elm.name);
+
+                        }
+
+
+                    }
+                );
+            }
+        );
     }
 
 
@@ -730,6 +780,7 @@
                     bindAllContent(elm, level || 0);
                     bindAllEvents(elm);
                     bindAllClasses(elm);
+                    bindAllModels(elm);
                 }
 
             }
@@ -1061,6 +1112,14 @@
         if (!inner) {
             console.debug('collected nr of rules: ' + Object.keys(allCSSRules).length);
         }
+    }
+
+    function modelRule(cssRules, selector, target, sources, keyword) {
+        console.log('model', selector, target, sources, keyword);
+        var elms = document.querySelectorAll(target);
+        modelBindings[target] = sources;
+        bindAllModels(document);
+
     }
 
     function addNewStylesheet() {
