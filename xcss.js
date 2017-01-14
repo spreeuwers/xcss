@@ -185,14 +185,24 @@
     function bindAllModels(parent) {
 
         function updateGUI(modelObj, modelExpr) {
-             var sameModels = document.querySelectorAll('[data-model="' + modelExpr + '"]');
-            [].slice.call(sameModels).forEach(
-                function (peer) {
-                    var name = peer.getAttribute('name') || '';
-                    peer.value = modelObj[name];
-                    peer.innerHTML = modelObj[name];
-                }
-            );
+            var sameModels = document.querySelectorAll('[data-model="' + modelExpr + '"]');
+            if (modelObj instanceof Object) {
+                [].slice.call(sameModels).forEach(
+                    function (peer) {
+                        var name = peer.getAttribute('name') || '';
+                        if (peer.constructor.prototype.hasOwnProperty('value')){
+                            peer.value = modelObj[name];
+                        } else{
+                            peer.innerHTML = modelObj[name];
+                        }
+
+
+
+
+
+                    }
+                );
+            }
         }
 
         Object.keys(modelBindings).forEach(
@@ -200,7 +210,7 @@
                 var scope = parent || document;
                 var targetElms = scope.querySelectorAll(target) || [];
                 var sources = modelBindings[target] || [];
-                var parts = (sources[0]||'').split('[');
+                var parts = (sources[0] || '').split('[');
                 var modelExpr = parts.shift().trim();
 
                 //var initExpr= parts.shift().split('=');
@@ -209,13 +219,11 @@
                 [].slice.call(targetElms).forEach(
                     function (elm) {
                         if (elm.getAttribute('data-model') !== modelExpr) {
-                            //var value =_evaluate(expression, elm);
                             var modelObj = _evaluate(modelExpr, elm);
-                            elm.setAttribute('data-model',modelExpr);
-                            //elm.value = modelObj[elm.name || ''];
+                            elm.setAttribute('data-model', modelExpr);
                             updateGUI(modelObj, modelExpr);
                             elm.addEventListener('input', function () {
-                                modelObj[elm.name||''] = elm.value;
+                                modelObj[elm.name || ''] = elm.value;
                                 updateGUI(modelObj, modelExpr);
 
                             });
@@ -353,9 +361,10 @@
                 if (matches = content.match(/^"(.*)"$/)) {
                     content = content.slice(1, -1);
                 }
-                allCSSRules[selector].style.content = '';
-            }
 
+            }
+            // important to remove content from style rule
+            allCSSRules[selector].style.content = '';
 
             //for each element matching the rule insertContent
             [].slice.call(targetElms).forEach(
@@ -760,7 +769,7 @@
 
         function insertHTML(html, level) {
             var tagName = elm.tagName.toLowerCase();
-            if (tagName === "input" || tagName === 'textarea') {
+            if ( elm.constructor.prototype.hasOwnProperty('value') && tagName !== 'select') {
                 if (!Array.isArray(elm.orgValue)) {
                     elm.orgValue = [elm.value];
                 }

@@ -92,7 +92,7 @@ nav>ul li{
     padding:3px;
 }
 
-main>article WHEN navigeer * [link][test="'${link}'"] [bgcolor="new Promise( function(res, rej) { window.setTimeout( function(){ res('blue');}, 2000); }) "] {
+main>article WHEN navigeer * [link][test="'${link}'"] [bgcolor="new Promise( function(res, rej) { window.setTimeout( function(){ res('lightblue');}, 2000); }) "] {
     content:url(`${link}.html`);
     background-color: var(--bgcolor,pink);
 }
@@ -149,10 +149,14 @@ div[sizing] SIZE  elm.scrollWidth > elm.width  {
   content:"`Short text`";
 
 }
+select[name="gender"]{
+    content:"'<option>male</option><option>female</option>'";
+}
 
-form[name="register"] input,form[name="register"] textarea MODEL person{
+form[name="register"] [name] MODEL person{
 
 }
+
 
 
 
