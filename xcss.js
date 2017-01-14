@@ -324,9 +324,10 @@
 
                     else if (EVENTS.indexOf(ucKeyword) >= 0) {
                         eventRule(cssRules, selector, target, sources, lcKeyword);
+                        extendRule(cssRules, selector, target, [selector], keyword);
 
                     }
-                } else if (cssRules[selector].style.content) {
+                } else if (cssRules[selector].style && cssRules[selector].style.content) {
                     insertContent(cssRules, selector, target, sources, keyword);
                 }
 
@@ -339,9 +340,9 @@
         var url, matches;
         var content = cssRules[selector].style.content || '';
 
-        var targetElms = document.querySelectorAll(selector);
+        var targetElms = document.querySelectorAll(target || selector);
         if (parent) {
-            targetElms = parent.querySelectorAll(selector);
+            targetElms = parent.querySelectorAll(target || selector);
         }
         //only handle rules without :before/:after
         if (!/:(before|after)/.test(selector)) {
@@ -721,7 +722,6 @@
                 elm.addEventListener(keyword.substring(2), elm.xcssHandler);
             }
         );
-
     }
 
     /**

@@ -1,0 +1,62 @@
+.hg,
+.hg-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.hg-nav {
+    order: -1;
+}
+
+@media (min-width: 768px) {
+    .hg-body {
+        flex-direction: row;
+        flex: 1;
+    }
+    .hg-content {
+        flex: 1;
+    }
+    .hg-nav, .hg-ads {
+        /* 12em is the width of the columns */
+        flex: 0 0 12em;
+    }
+}
+
+header{
+    background-color: black;
+    color:white;
+    padding:0.5rem;
+    font-size: 2rem;
+    font-weight: bold;
+}
+header div{
+    font-size: 1rem;
+    font-weight: normal;
+    margin: auto;
+    position: relative;
+}
+
+body{
+    font-family: arial;
+    margin: 0px;
+}
+
+div[hamburger] ONCLICK >.menu{
+    content:"`<span></span><span></span><span></span>`";
+    width:2rem;
+    height:2rem;
+    background: transparent;
+    position:absolute;
+    right:1rem;
+    top:1rem;
+
+}
+
+
+div[hamburger] span {
+    with:80%;
+    height:20%;
+    background-color: white;
+    display: block;
+    margin-bottom:20%;
+}
