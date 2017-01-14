@@ -13,9 +13,68 @@
 <body class="hg">
 <header>XCSS<div>a wayward framework based on css</div><div hamburger></div></header>
 <div class="hg-body">
-    <main class="hg-content">main</main>
-    <nav class="hg-nav"><a href="intro">introduction</a></nav>
-    <aside class="hg-ads">aside</aside>
+    <main class="hg-content">
+        <h1>Introduction</h1>
+        XCSS is a framework for webapp building that is different from frameworks like Angular and React.<br>
+        It is also an experiment on how to do web developemnt using css as a framework.<br>
+        Since all css rules act on selections of elements,
+        expressing the logic with css rules should be a powerfull way to implement functionality in web pages.
+        Adding this xcss.js script to a web page is then enough to enable new css functionality.
+        If you like the idea please join the project.<a href="https://github.com/spreeuwers/xcss">https://github.com/spreeuwers/xcss</a>
+        <p>
+        Development of XCSS.js began with an experiment to implement the extends keyword for css.
+        I thought is it was easier to make it possible to use keywords in css ruls then learning sass,
+        Alsso the <b>extends</b> keyword means nothing in a css selector
+        unless you would create an element by that name.
+<pre>
+
+    red-button {
+      background-color:red;
+    }
+
+    red-green-button extends dialog{
+       border:2px solid green;
+    }
+
+</pre>
+        </p>
+        <p>
+            The next step was that i realised that i could use the content property in css rules to allow templating.
+<pre>
+
+    div[string-content] {
+      content:"'&lt;span&gt;hello&lt;/span&gt;'"
+    }
+
+    div[url-content] {
+      content:url(page2.html)
+    }
+
+</pre>
+        </p>
+        <p>
+        Then i thought of a way to do routing in css. By introducing the ONCLICK and more ON event keywords that allowed
+        adding event listeners to elements that changed the location hash and a WHEN keyword than applied a style depending on the location hash,
+        i created a simple routing mechanism.
+
+<pre>
+
+    button ONCLICK showpage2 {
+    }
+
+    div WHEN showpage2 {
+      content:url(page2.html)
+    }
+
+</pre>
+    </main>
+    <nav class="hg-nav">
+        <!--<h1>Menu</h1>-->
+        <!--<a href="intro">introduction</a><br>-->
+        <!--<a href="intro">introduction</a><br>-->
+        <!--<a href="intro">introduction</a>-->
+    </nav>
+    <aside class="hg-ads"></aside>
 </div>
-<footer>footer</footer>
+
 </body>

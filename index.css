@@ -8,6 +8,20 @@
     order: -1;
 }
 
+.hg-content {
+    flex: 1;
+}
+
+.hg-nav, .hg-ads {
+    /* 12em is the width of the columns */
+    flex: 0 0 6em;
+}
+
+.hg-nav {
+    /* put the nav on the left */
+    order: -1;
+}
+
 @media (min-width: 768px) {
     .hg-body {
         flex-direction: row;
@@ -15,11 +29,15 @@
     }
     .hg-content {
         flex: 1;
+
     }
     .hg-nav, .hg-ads {
         /* 12em is the width of the columns */
-        flex: 0 0 12em;
+        flex: 0 0 6em;
     }
+}
+main,nav,aside {
+    padding:0.5rem;
 }
 
 header{
@@ -59,4 +77,9 @@ div[hamburger] span {
     background-color: white;
     display: block;
     margin-bottom:20%;
+}
+
+pre {
+    background-color: black;
+    color:white;
 }
