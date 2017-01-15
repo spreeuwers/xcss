@@ -38,6 +38,8 @@
 }
 main,nav,aside {
     padding:0.5rem;
+    font-weight: lighter;
+    
 }
 
 header{
@@ -57,6 +59,8 @@ header div{
 body{
     font-family: arial;
     margin: 0px;
+    line-height: 1.5em;
+
 }
 
 div[hamburger] ONCLICK >.menu{
