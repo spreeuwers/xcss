@@ -17,9 +17,10 @@
         <h1>Introduction</h1>
         <a href="https://github.com/spreeuwers/xcss">XCSS</a>
         It is an experimental framework for web development using css style rules and plain js.
-        Since there are only a few hundred js frameworks i thought it was about time to introduce yet another one.
+        Since there are only a few hundred js frameworks I thought it was about time to introduce yet another one.
+        I think all programmers should create their on frame work! ;)
         <br>
-        Since i hate installing tools and libraries (i am the worst admin) my starting point was that just adding the xcss.js script
+        Since I dont like installing tools and libraries my starting point was that just adding the xcss.js script
         to a web page should be enough to enable the framework and add the new css functionality provided.
         No extra tools for building should be needed.<br>
         Unlike powerfull frameworks like AngularJS and React my framework should be super simple to use
@@ -29,7 +30,7 @@
         <p>
         XCSS.js emerged from an experiment to implement the <b>extends</b> keyword for css
         using a js library that manipulates css rules.
-        Since i am too lazy to learn  sass, i thought i would give it a try and
+        Since i did not want to use SASS, I thought, I would give it a try and
         make it possible to write the following syntax:
 
 <pre>
@@ -43,17 +44,25 @@
     }
 
 </pre>
-        The <b>extends</b> keyword means nothing in a css selector
-        unless you would create an element by that name. It would have no impact on page rendering.
-        Since all css rules act on selections of elements, expressing the logic with css rules
-        should be a powerfull way to implement functionality in web pages.
+        Because the <b>extends</b> keyword means nothing in a css selector
+        unless you would create an element by that name,
+        introducing this keyword would have no impact on page rendering.<br>
+        Then I contemplated that CSS rules act on selections of elements ant that expressing the logic with css rules
+        whould be a powerfull way to implement functionality in web pages.
+        And I looked for other extensions that I could add to CSS.
         </p>
         <p>
-            The next step was that i realised that i could use the content property in css rules to allow templating.
+            I discovered that I could use the content property in css rules to allow templating.
+            I allowed the content property value to be a javascript expression so any content could be inserted.
+            I added CORS security only allowing same origin css files to be interpreted.
 <pre>
 
     div[string-content] {
       content:"'&lt;span&gt;hello&lt;/span&gt;'"
+    }
+
+    div[js-content] {
+      content:"document.getElementById('page1).innerHTML";
     }
 
     div[url-content] {
@@ -76,9 +85,13 @@
       content:url(page2.html)
     }
 
+    div WHEN * astate [myvar="myModule.myfunc()"]{
+        color:var(--myvar);
+    }
+
 </pre>
-        If you like the idea please join the project.<a href="https://github.com/spreeuwers/xcss">https://github.com/spreeuwers/xcss</a>
-    </main>
+        If you like to to contribute to the project or experiment with my library xcss.js, then look at.<a href="https://github.com/spreeuwers/xcss">https://github.com/spreeuwers/xcss</a>
+   </main>
     <nav class="hg-nav">
         <!--<h1>Menu</h1>-->
         <!--<a href="intro">introduction</a><br>-->
