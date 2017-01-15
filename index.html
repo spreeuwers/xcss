@@ -21,16 +21,16 @@
         I think all programmers should create their on frame work! ;)
         <br>
         Since I dont like installing tools and libraries my starting point was that just adding the xcss.js script
-        to a web page should be enough to enable the framework and add the new css functionality provided.
+        to a web page should be enough to enable the framework and add the new css functionality.
         No extra tools for building should be needed.<br>
         Unlike powerfull frameworks like AngularJS and React my framework should be super simple to use
-        and require no other tools to build an app.<br>
+        and require no tools to get started.<br>
 
 
         <p>
         XCSS.js emerged from an experiment to implement the <b>extends</b> keyword for css
         using a js library that manipulates css rules.
-        Since i did not want to use SASS, I thought, I would give it a try and
+        Since I did not want to use SASS, I thought, I would give it a try and
         make it possible to write the following syntax:
 
 <pre>
@@ -47,14 +47,14 @@
         Because the <b>extends</b> keyword means nothing in a css selector
         unless you would create an element by that name,
         introducing this keyword would have no impact on page rendering.<br>
-        Then I contemplated that CSS rules act on selections of elements ant that expressing the logic with css rules
+        Then I contemplated that CSS rules act on selections of elements and that expressing the logic with css rules
         whould be a powerfull way to implement functionality in web pages.
         And I looked for other extensions that I could add to CSS.
         </p>
         <p>
-            I discovered that I could use the content property in css rules to allow templating.
-            I allowed the content property value to be a javascript expression so any content could be inserted.
-            I added CORS security only allowing same origin css files to be interpreted.
+            I discovered that I could use the content property in css rules to implement a templating mechanism.
+            Allowing the content property value to be a javascript expression created a way to pull content in from js modules .
+            Therfore I added CORS security, only allowing same origin css files to be interpreted.
 <pre>
 
     div[string-content] {
@@ -72,7 +72,7 @@
 </pre>
         </p>
         <p>
-        Then i thought of a way to do routing in css. By introducing the ONCLICK and more ON event keywords that allowed
+        Then I thought of a way to do routing in css. By introducing the ONCLICK and more ON event keywords that allowed
         adding event listeners to elements that changed the location hash and a WHEN keyword than applied a style depending on the location hash,
         i created a simple routing mechanism.
 
