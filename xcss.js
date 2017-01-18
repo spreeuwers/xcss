@@ -781,8 +781,12 @@
                 //only update if needed so we keep element events working
                 //no need to bind events again if the content is not changed
                 if (html !== elm.dataHtml) {
-                    elm.innerHTML = html;
                     elm.dataHtml = html;
+                    if (elm.innerHTML.indexOf('<!--slot-->') >=0){
+                        html = elm.innerHTML.replace('<!--slot-->',html);
+                    }
+                    elm.innerHTML = html;
+
                     //if we have a change in the html rebind all events if needed
                     //so events bind seems to work as styles whenever an element
                     //matches the css rule the event is present
@@ -894,6 +898,10 @@
                                 value = value.replace(/\\'/g, "'"); //firefox escape quotes in attributes
                                 try {
                                     state[cssKey] = _evaluate(value, elm) || '';
+                                    //support direct js manipulation of css variables
+                                    if(/^--/.test(cssKey)){
+                                        elm.style.setProperty(cssKey,state[cssKey]);
+                                    }
                                 } catch (e) {
                                     console.error('could not evaluate', value);
                                 }

@@ -20,6 +20,17 @@
 .hg-nav {
     /* put the nav on the left */
     order: -1;
+    display: none;
+    content:"`<a href='#extends'>Extends</a><a href='#applies'>Applies</a>`";
+}
+.hg-nav a{
+    display:block;
+}
+
+.hg-nav WHEN * menu {
+    display: block;
+
+
 }
 
 @media (min-width: 768px) {
@@ -34,7 +45,13 @@
     .hg-nav, .hg-ads {
         /* 12em is the width of the columns */
         flex: 0 0 6em;
+        display: block;
     }
+
+    div[hamburger]{
+        display:none;
+    }
+
 }
 main,nav,aside {
     padding:0.5rem;
@@ -48,6 +65,7 @@ header{
     padding:0.5rem;
     font-size: 2rem;
     font-weight: bold;
+    text-align: center;
 }
 header div{
     font-size: 1rem;
@@ -71,7 +89,6 @@ div[hamburger] ONCLICK >.menu{
     position:absolute;
     right:1rem;
     top:1rem;
-
 }
 
 

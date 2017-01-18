@@ -11,7 +11,7 @@
     <script type="text/javascript" src="xcss.js"></script>
 </head>
 <body class="hg">
-<header>XCSS<div>a wayward framework based on css</div><div hamburger></div></header>
+<header>XCSS<div>a wayward framework based on writing css rules</div><div hamburger></div></header>
 <div class="hg-body">
     <main class="hg-content">
         <h1>Introduction</h1>
@@ -28,6 +28,8 @@
 
 
         <p>
+
+        <a name="extends"><h3>Extends</h3></a>
         XCSS.js emerged from an experiment to implement the <b>extends</b> keyword for css
         using a js library that manipulates css rules.
         Since I did not want to use SASS, I thought, I would give it a try and
@@ -91,12 +93,28 @@
 
 </pre>
         If you like to to contribute to the project or experiment with my library xcss.js, then look at.<a href="https://github.com/spreeuwers/xcss">https://github.com/spreeuwers/xcss</a>
-   </main>
+
+    <a name="applies"><h3>Applies</h3></a>
+    <p applies>
+        <pre>
+
+    button APPLIES .MyClass {
+    }
+
+    .MyClass {
+      border:1px solid red;
+    }
+
+    html:
+    &lt;button class="MyClass"&gt;&lt;/button&gt;
+
+</pre>
+
+    </p>
+    </main>
     <nav class="hg-nav">
-        <!--<h1>Menu</h1>-->
-        <!--<a href="intro">introduction</a><br>-->
-        <!--<a href="intro">introduction</a><br>-->
-        <!--<a href="intro">introduction</a>-->
+        <h1>Menu</h1>
+        <!--slot-->
     </nav>
     <aside class="hg-ads"></aside>
 </div>
