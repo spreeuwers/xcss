@@ -2,6 +2,7 @@
 .hg-body {
     display: flex;
     flex-direction: column;
+    height:100vh;
 }
 
 .hg-nav {
@@ -56,6 +57,7 @@
 main,nav,aside {
     padding:0.5rem;
     font-weight: lighter;
+    overflow-y:auto;
     
 }
 

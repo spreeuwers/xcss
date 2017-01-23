@@ -66,14 +66,15 @@
 }
 
 
-#myrange ONCHANGE rotate[angle="`${value}deg`"][bgcolor="`rgb(${value},0,${value})`" ] {}
+#myrange ONCHANGE rotate[angle="`${value}deg`"][bkgcolor="`rgb(${value},0,${value})`" ] {}
 
 #dlg1{
     --angle:45deg;
     --bgcolor:#FFFFFF;
 }
 
-#dlg1 WHEN rotate {
+#dlg1 WHEN rotate [bgcolor="'${bkgcolor}'"]{
+
     transform:rotate(var(--angle));
     background-color:var(--bgcolor);
 }
@@ -81,7 +82,7 @@
 
 
 #angle WHEN rotate[value]{
-    content:'${value}'
+  content:'${value}';
 }
 
 nav>ul li ONCLICK navigeer[link] {}
