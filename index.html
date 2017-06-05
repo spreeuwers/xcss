@@ -9,6 +9,11 @@
     <title>xcss</title>
     <link href="index.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="xcss.js"></script>
+    <script>
+        function openCamera(){
+            parent.postMessage("openCamera","*");
+        }
+    </script>
 </head>
 <body class="hg">
 <header>XCSS<div>a wayward framework based on writing css rules</div><div hamburger></div></header>
@@ -41,12 +46,12 @@
       background-color:red;
     }
 
-    red-green-button extends dialog{
+    red-green-button extends red-button {
        border:2px solid green;
     }
 
 </pre>
-        Because the <b>extends</b> keyword means nothing in a css selector
+        Because the <b>extends</b> keyword is meaningless in a css selector
         unless you would create an element by that name,
         introducing this keyword would have no impact on page rendering.<br>
         Then I contemplated that CSS rules act on selections of elements and that expressing the logic with css rules
@@ -113,10 +118,11 @@
     </p>
     </main>
     <nav class="hg-nav">
-        <h1>Menu</h1>
+        <!--<h1>Menu</h1><button onclick="openCamera()">camera</button>-->
         <!--slot-->
     </nav>
     <aside class="hg-ads"></aside>
 </div>
+<button  style="position:absolute;left:0vw;bottom:0vh;width:100vw" onclick="openCamera(this)">foto</button>
 
 </body>

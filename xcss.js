@@ -14,6 +14,8 @@
     var timerBindings = {};
     var modelBindings = {};
     var stateListeners = [];
+
+
     // var WHEN = 'when';
     // var AND = 'and';
     // var EXTENDS = 'extends';
@@ -190,14 +192,11 @@
                 [].slice.call(sameModels).forEach(
                     function (peer) {
                         var name = peer.getAttribute('name') || '';
-                        if (peer.constructor.prototype.hasOwnProperty('value')){
+                        if (peer.constructor.prototype.hasOwnProperty('value')) {
                             peer.value = modelObj[name];
-                        } else{
+                        } else {
                             peer.innerHTML = modelObj[name];
                         }
-
-
-
 
 
                     }
@@ -240,9 +239,9 @@
 
 
     function processCSSRulesAsync() {
-        //wait 100 ms before collecting the stylesheetrules
-        //so they can be loaded bu the browser
-        window.setTimeout(processCSSRules, 100);
+        //wait 10 ms before collecting the stylesheet rules
+        //so they can be loaded by the browser
+        window.setTimeout(processCSSRules, 10);
     }
 
     /**
@@ -251,10 +250,15 @@
     function processCSSRules() {
         //collect all style rules
         console.time('processCSSRules');
-        collectRules(document);
-        compileRules(allCSSRules);
-        console.timeEnd('processCSSRules');
-        stateChanged();
+        collectRules(document).then(
+            function () {
+                compileRules(allCSSRules);
+                console.timeEnd('processCSSRules');
+                stateChanged();
+            }
+        );
+
+
     }
 
     /**
@@ -335,7 +339,7 @@
         );
     }
 
-    //insertContent for any css role having a content property without before/after pseudo selector
+//insertContent for any css role having a content property without before/after pseudo selector
     function insertContent(cssRules, selector, target, sources, keyword, parent, level) {
         var url, matches;
         var content = cssRules[selector].style.content || '';
@@ -769,7 +773,7 @@
 
         function insertHTML(html, level) {
             var tagName = elm.tagName.toLowerCase();
-            if ( elm.constructor.prototype.hasOwnProperty('value') && tagName !== 'select') {
+            if (elm.constructor.prototype.hasOwnProperty('value') && tagName !== 'select') {
                 if (!Array.isArray(elm.orgValue)) {
                     elm.orgValue = [elm.value];
                 }
@@ -782,8 +786,8 @@
                 //no need to bind events again if the content is not changed
                 if (html !== elm.dataHtml) {
                     elm.dataHtml = html;
-                    if (elm.innerHTML.indexOf('<!--slot-->') >=0){
-                        html = elm.innerHTML.replace('<!--slot-->',html);
+                    if (elm.innerHTML.indexOf('<!--slot-->') >= 0) {
+                        html = elm.innerHTML.replace('<!--slot-->', html);
                     }
                     elm.innerHTML = html;
 
@@ -899,8 +903,8 @@
                                 try {
                                     state[cssKey] = _evaluate(value, elm) || '';
                                     //support direct js manipulation of css variables
-                                    if(/^--/.test(cssKey)){
-                                        elm.style.setProperty(cssKey,state[cssKey]);
+                                    if (/^--/.test(cssKey)) {
+                                        elm.style.setProperty(cssKey, state[cssKey]);
                                     }
                                 } catch (e) {
                                     console.error('could not evaluate', value);
@@ -1107,33 +1111,83 @@
         };
     }
 
+
     /**
      * recursively walk through the stylesheets of same origin and collect all css rules
      * @param container
-     * @param inner
+     * @param resolve, reject, loadings
      */
-    function collectRules(container, inner) {
+    function collectRules(container, resolve, reject, loadings) {
+
+        //top level returns a promise and recursivly passe resolve function
+        if (!resolve) {
+            return new Promise(
+                function (resolve, reject) {
+                    var loadings = {};
+                    collectRules(container, resolve, reject, loadings);
+                    var tries = 0;
+                    window.setTimeout(
+                        function checkReady() {
+                            var ready = Object.keys(loadings).every(function (key) {
+                                return loadings[key];
+                            });
+                            if (ready) {
+                                console.debug('collected nr of rules: ' + Object.keys(allCSSRules).length);
+                                resolve();
+                            } else {
+                                tries++;
+                                if (tries < 10) {
+                                    window.setTimeout(checkReady, 10);
+                                } else{
+                                    console.error('not load rules from :' + container.href + '!, could be a CORS problem');
+                                }
+                            }
+
+                        }, 10
+                    );
+
+                }
+            );
+        }
+
+
         [].slice.call(container.styleSheets || []).forEach(
             function (styleSheet) {
-                if ((styleSheet.href || '').indexOf(window.location.origin) === 0) {
-
-                    [].slice.call(styleSheet.cssRules || []).forEach(
-                        function (cssRule) {
-                            allCSSRules[cssRule.selectorText] = cssRule;
-                        }
-                    );
+                if ((styleSheet.href || window.location.origin).indexOf(window.location.origin) === 0) {
+                    extractRules(styleSheet, loadings);
                 }
-                collectRules(styleSheet, true);
+                collectRules(styleSheet, resolve, reject, loadings);
             }
         );
-        if (!inner) {
-            console.debug('collected nr of rules: ' + Object.keys(allCSSRules).length);
+
+
+    }
+
+    function extractRules(styleSheet, loadings, counter) {
+        var count = (counter||0) + 1;
+        if (styleSheet.cssRules) {
+            [].slice.call(styleSheet.cssRules || []).forEach(
+                function (cssRule) {
+                    allCSSRules[cssRule.selectorText] = cssRule;
+                }
+            );
+            loadings[styleSheet.href]=true;
+        } else {
+            loadings[styleSheet.href] = false;
+
+            if (count > 10) {
+                console.log('no rules');
+                return;
+            }
+
+            window.setTimeout(function(){extractRules(styleSheet, loadings, count);}, 100);
+
         }
     }
 
+
     function modelRule(cssRules, selector, target, sources, keyword) {
         console.log('model', selector, target, sources, keyword);
-        var elms = document.querySelectorAll(target);
         modelBindings[target] = sources;
         bindAllModels(document);
 
@@ -1150,6 +1204,7 @@
     }
 
 
-})(function _evaluate(expr, elm, self) {
+})
+(function _evaluate(expr, elm, self) {
     return eval(expr);
 });
