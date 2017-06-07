@@ -355,7 +355,7 @@
 
             }
 
-            console.log('inserting content for: ' + selector);
+            console.trace('inserting content for: ' + selector);
 
             if (matches = content.match(/^"?url\(([^)]*)\)"?$/)) {
                 url = matches[1];
@@ -377,7 +377,6 @@
                     if (elm.insertedContent !== content) {
                         elm.insertedContent = content;
                         if (url) {
-                            //elm.style.content='';
                             if (/^@/.test(url)) {
                                 url = "'" + url + "'";
                             }
