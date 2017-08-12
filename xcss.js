@@ -741,6 +741,7 @@
         while (url.indexOf('@') === 0) {
             url = elm.getAttribute(url.substring(1));
         }
+        url = encodeURI(url);
         fetch(url).then(
             function (response) {
                 response.text().then(function (data) {
@@ -1205,5 +1206,5 @@
 
 })
 (function _evaluate(expr, elm, self) {
-    return eval(expr);
+    return eval(decodeURIComponent(expr));
 });
